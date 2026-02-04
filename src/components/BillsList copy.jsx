@@ -6,42 +6,22 @@ export function BillsList({ loading, data, onRefresh, myUserId }) {
   // FILTRO: Só mostra o que pertence ao usuário logado
   const myShares = data.filter((item) => item.user_id === myUserId);
 
-  // Função para Deletar a Despesa (afeta todos os envolvidos)
   async function handleDelete(expenseId, description) {
-    const confirmed = window.confirm(
-      `Deseja realmente excluir a conta "${description}"? Isso apagará o registro para todos os participantes.`,
-    );
-
-    if (confirmed) {
-      const { error } = await supabase
-        .from("expenses")
-        .delete()
-        .eq("id", expenseId);
-
-      if (error) {
-        alert("Erro ao deletar: " + error.message);
-      } else {
-        onRefresh(); // Atualiza o Dashboard
-      }
-    }
+    if (!window.confirm(`Excluir "${description}" para TODOS?`)) return;
+    const { error } = await supabase
+      .from("expenses")
+      .delete()
+      .eq("id", expenseId);
+    if (!error) onRefresh();
   }
 
-  // Função para Alternar Status de Pagamento (individual)
   async function togglePayment(expenseId, profileId, currentStatus) {
     const { error } = await supabase
       .from("expense_splits")
-      .update({
-        is_paid: !currentStatus,
-        paid_at: !currentStatus ? new Date().toISOString() : null,
-      })
+      .update({ is_paid: !currentStatus })
       .eq("expense_id", expenseId)
       .eq("profile_id", profileId);
-
-    if (error) {
-      alert("Erro ao atualizar status: " + error.message);
-    } else {
-      onRefresh(); // Atualiza o Dashboard
-    }
+    if (!error) onRefresh();
   }
 
   return (
@@ -51,21 +31,18 @@ export function BillsList({ loading, data, onRefresh, myUserId }) {
           Minhas Despesas do Mês
         </span>
         <span className="text-[10px] font-bold text-slate-400 uppercase tracking-widest">
-          {myShares.length} {myShares.length > 1 ? "contas" : "conta"}
+          {myShares.length} contas
         </span>
       </div>
 
       <div className="divide-y divide-slate-100">
         {loading ? (
-          <div className="p-12 text-center">
-            <div className="inline-block animate-spin rounded-full h-8 w-8 border-4 border-slate-200 border-t-green-600 mb-4"></div>
-            <p className="text-slate-500 text-sm animate-pulse">
-              Carregando...
-            </p>
+          <div className="p-12 text-center animate-pulse text-slate-400">
+            Carregando...
           </div>
         ) : myShares.length === 0 ? (
           <div className="p-12 text-center text-slate-400 italic text-sm">
-            Nenhuma conta cadastrada para este mês.
+            Você não tem cotas registradas este mês.
           </div>
         ) : (
           myShares.map((item) => (
@@ -97,9 +74,10 @@ export function BillsList({ loading, data, onRefresh, myUserId }) {
                   >
                     {item.description}
                   </p>
+                  {/* Badge do Valor Total da Conta */}
                   <div className="flex items-center gap-2 mt-1">
                     <span className="text-[10px] bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded font-medium">
-                      Conta Total: R$ {item.expense_total?.toFixed(2)}
+                      Total: R$ {item.total_value?.toFixed(2)}
                     </span>
                   </div>
                 </div>
@@ -111,7 +89,7 @@ export function BillsList({ loading, data, onRefresh, myUserId }) {
                     Minha Parte
                   </p>
                   <p
-                    className={`font-black text-base ${item.is_paid ? "text-slate-400" : "text-amber-600"}`}
+                    className={`font-black text-base ${item.is_paid ? "text-slate-400" : "text-green-600"}`}
                   >
                     R$ {item.share_amount.toFixed(2)}
                   </p>

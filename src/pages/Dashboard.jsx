@@ -121,7 +121,12 @@ export function Dashboard() {
           onClose={() => setIsModalOpen(false)}
           onRefresh={fetchMonthlyData}
         />
-        <BillsList data={data} loading={loading} onRefresh={fetchMonthlyData} />
+        <BillsList
+          data={data}
+          loading={loading}
+          onRefresh={fetchMonthlyData}
+          myUserId={myProfile?.user_id}
+        />
         <FamilyShare data={data} totalGeral={totalGeral} />
       </main>
     </div>
