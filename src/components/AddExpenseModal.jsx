@@ -1,16 +1,20 @@
 import React, { useState } from "react";
-import { X, Plus, Calendar } from "lucide-react";
+import { X, Plus, Calendar, Calculator } from "lucide-react";
 import { supabase } from "../lib/supabase";
 import { useMembers } from "../hooks/useMembers";
+import { useAddExpense } from "../hooks/useAddExpense";
 
 export function AddExpenseModal({ isOpen, onClose, onRefresh }) {
   const members = useMembers();
+  const { addExpense, isSaving } = useAddExpense();
+
+  // Estados locais de controle do formulário
   const [description, setDescription] = useState("");
   const [value, setValue] = useState("");
   const [type, setType] = useState("recorrente");
   const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
   const [selectedMembers, setSelectedMembers] = useState([]);
-  const [isSaving, setIsSaving] = useState(false);
+  const [installments, setInstallments] = useState(1);
 
   if (!isOpen) return null;
 
@@ -20,57 +24,24 @@ export function AddExpenseModal({ isOpen, onClose, onRefresh }) {
     );
   };
 
-  const handleSave = async () => {
-    const totalValue = parseFloat(value);
-    if (!description || !totalValue || selectedMembers.length === 0) {
-      alert("Preencha todos os campos e selecione pelo menos uma pessoa!");
-      return;
-    }
-
-    setIsSaving(true);
-    try {
-      // 1. Criar a despesa
-      const { data: expense, error: expError } = await supabase
-        .from("expenses")
-        .insert([
-          {
-            description,
-            total_value: totalValue,
-            due_date: date,
-            billing_month: date.substring(0, 7) + "-01",
-            type: type, // Usando o estado dinâmico
-          },
-        ])
-        .select()
-        .single();
-
-      if (expError) throw expError;
-
-      // 2. Criar os splits
-      const share = (100 / selectedMembers.length).toFixed(2);
-      const splits = selectedMembers.map((memberId) => ({
-        expense_id: expense.id,
-        profile_id: memberId,
-        share_percentage: share,
-      }));
-
-      const { error: splitError } = await supabase
-        .from("expense_splits")
-        .insert(splits);
-
-      if (splitError) throw splitError;
-
-      // Sucesso: Limpar campos e fechar
-      setDescription("");
-      setValue("");
-      setSelectedMembers([]);
-      onRefresh();
-      onClose();
-    } catch (error) {
-      alert("Erro ao salvar: " + error.message);
-    } finally {
-      setIsSaving(false);
-    }
+  const handleSave = () => {
+    addExpense({
+      description,
+      value,
+      date,
+      type,
+      installments,
+      selectedMembers,
+      onSuccess: () => {
+        onRefresh();
+        onClose();
+        // Reset local
+        setDescription("");
+        setValue("");
+        setInstallments("");
+        setSelectedMembers([]);
+      },
+    });
   };
 
   return (
@@ -94,7 +65,7 @@ export function AddExpenseModal({ isOpen, onClose, onRefresh }) {
         <div className="p-6 space-y-5">
           {/* Seletor de Tipo */}
           <div className="flex p-1 bg-slate-100 rounded-xl gap-1">
-            {["recorrente", "avulsa"].map((t) => (
+            {["recorrente", "parcelada"].map((t) => (
               <button
                 key={t}
                 onClick={() => setType(t)}
@@ -118,7 +89,7 @@ export function AddExpenseModal({ isOpen, onClose, onRefresh }) {
               onChange={(e) => setDescription(e.target.value)}
             />
 
-            <div className="grid grid-cols-2 gap-3">
+            <div className="grid grid-cols-2 gap-4">
               <div className="relative">
                 <span className="absolute left-3 top-4 text-slate-400 text-sm">
                   R$
@@ -137,6 +108,26 @@ export function AddExpenseModal({ isOpen, onClose, onRefresh }) {
                 value={date}
                 onChange={(e) => setDate(e.target.value)}
               />
+              {type === "parcelada" && (
+                <div className="col-span-2 animate-in slide-in-from-top-2 duration-300">
+                  <label className="text-[10px] font-bold text-slate-400 mb-1 ml-1 block uppercase">
+                    Número de Parcelas
+                  </label>
+                  <div className="relative">
+                    <Calculator
+                      className="absolute left-3 top-4 text-slate-400"
+                      size={18}
+                    />
+                    <input
+                      type="number"
+                      placeholder="Ex: 12 (vezes)"
+                      className="w-full p-3 pl-10 bg-green-50/50 border border-green-100 rounded-xl focus:ring-2 focus:ring-green-500 outline-none font-bold text-green-700"
+                      value={installments}
+                      onChange={(e) => setInstallments(e.target.value)}
+                    />
+                  </div>
+                </div>
+              )}
             </div>
           </div>
 
