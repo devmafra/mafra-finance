@@ -27,13 +27,27 @@ export function Dashboard() {
 
   // Busca os dados do meu perfil na tabela profiles
   async function fetchMyProfile() {
-    const { data: profile } = await supabase
+    const { data: profile, error } = await supabase
       .from("profiles")
-      .select("*")
+      .select(
+        `
+      *,
+      families (
+        name
+      )
+    `,
+      ) // Isso faz um "Join" automático no Supabase
       .eq("user_id", user.id)
       .single();
 
-    setMyProfile(profile);
+    if (!error && profile) {
+      // Ajustamos o objeto para o Header entender 'family_name'
+      const profileWithFamily = {
+        ...profile,
+        family_name: profile.families?.name || "Membro Solo",
+      };
+      setMyProfile(profileWithFamily);
+    }
   }
 
   async function fetchMonthlyData() {
@@ -73,8 +87,8 @@ export function Dashboard() {
       <Header
         currentMonth={currentMonth}
         setCurrentMonth={setCurrentMonth}
+        myProfile={myProfile}
         onAddBill={() => setIsModalOpen(true)}
-        myProfile={""}
       />
 
       <main className="max-w-4xl mx-auto space-y-6">
