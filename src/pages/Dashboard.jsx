@@ -97,22 +97,25 @@ export function Dashboard() {
           <SummaryCard
             title="Minha Cota"
             value={meuTotal}
-            icon={<CheckCircle2 className="text-emerald-600" />}
-            color="bg-emerald-50"
+            loading={loading}
+            icon={<CheckCircle2 className="text-emerald-600" size={20} />}
+            color="bg-green-50"
           />
 
           <SummaryCard
             title="Cota Familiar"
             value={totalFamilia}
-            icon={<Users className="text-purple-600" />}
-            color="bg-purple-50"
+            loading={loading}
+            icon={<Users className="text-purple-600" size={20} />}
+            color="bg-green-50"
           />
 
           <SummaryCard
             title="Total da Casa"
             value={totalGeral}
-            icon={<Wallet className="text-blue-600" />}
-            color="bg-blue-50"
+            loading={loading}
+            icon={<Wallet className="text-blue-600" size={20} />}
+            color="bg-green-50"
           />
         </div>
 
