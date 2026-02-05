@@ -76,8 +76,8 @@ export function Header({
             <div className="flex items-center gap-2 mt-0.5">
               {/* Prefixo Fixo "Família" */}
               <span className="text-[10px] text-slate-400 uppercase font-bold tracking-[0.1em] text-right">
-                {myProfile?.family_name
-                  ? `Família ${myProfile.family_name}`
+                {myProfile?.family_name != "Solo"
+                  ? `Família ${myProfile?.family_name}`
                   : "Voo Solo"}
               </span>
 
