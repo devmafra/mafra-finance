@@ -134,7 +134,7 @@ export function OnboardingBanner({ userId, onRefresh }) {
               <button
                 disabled={loading || !isInputValid}
                 onClick={handleAction}
-                className="bg-green-600 hover:bg-green-700 disabled:bg-slate-700 disabled:cursor-not-allowed px-6 py-2 rounded-xl font-bold transition-all text-white"
+                className="flex items-center gap-2 bg-green-600 hover:bg-green-700 disabled:bg-slate-700 disabled:cursor-not-allowed px-6 py-2 rounded-xl font-bold transition-all text-white"
               >
                 {loading ? (
                   "Processando..."
@@ -151,7 +151,7 @@ export function OnboardingBanner({ userId, onRefresh }) {
                   setMode(null);
                   setInputValue("");
                 }}
-                className="flex items-center gap-2 text-slate-400 hover:text-white px-4 py-2 rounded-xl hover:bg-slate-800 transition-all text-sm font-medium"
+                className="flex items-center gap-2 text-slate-400 hover:text-white px-6 py-2 rounded-xl hover:bg-slate-800 transition-all text-sm font-medium"
               >
                 <ArrowLeft size={16} />
                 Cancelar
