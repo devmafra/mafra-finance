@@ -2,23 +2,36 @@ import React from "react";
 import { PieChart, TrendingUp } from "lucide-react";
 
 export function FamilyShare({ data, totalGeral }) {
-  // 1. Agrupar valores por família/membro
+  // 1. Agrupar valores por família OU por membro individual (se for solo)
   const familyData = data.reduce((acc, item) => {
-    const name = item.family_name || "Membros Solo";
-    if (!acc[name]) {
-      acc[name] = { total: 0, count: 0 };
+    // Se não tiver família ou for 'Solo', o 'id' do grupo é o profile_id (único)
+    // Caso contrário, o 'id' do grupo é o próprio nome da família
+    const isSolo = !item.family_name || item.family_name === "Solo";
+    const groupKey = isSolo
+      ? `individual-${item.profile_id}`
+      : item.family_name;
+    const displayName = isSolo ? item.full_name : item.family_name;
+
+    if (!acc[groupKey]) {
+      acc[groupKey] = {
+        name: displayName,
+        total: 0,
+        count: 0,
+        isSolo: isSolo,
+      };
     }
-    acc[name].total += item.share_amount;
-    acc[name].count += 1;
+    acc[groupKey].total += item.share_amount;
+    acc[groupKey].count += 1;
     return acc;
   }, {});
 
-  // 2. Transformar em Array e ordenar do maior para o menor
-  const sortedFamilies = Object.entries(familyData)
-    .map(([name, stats]) => ({
-      name,
+  // 2. Transformar em Array e ordenar
+  const sortedFamilies = Object.values(familyData)
+    .map((stats) => ({
+      name: stats.name,
       total: stats.total,
       count: stats.count,
+      isSolo: stats.isSolo,
       percentage: totalGeral > 0 ? (stats.total / totalGeral) * 100 : 0,
     }))
     .sort((a, b) => b.total - a.total);
@@ -30,7 +43,7 @@ export function FamilyShare({ data, totalGeral }) {
       <div className="p-5 border-b bg-slate-50/50 flex items-center justify-between">
         <div className="flex items-center gap-2">
           <PieChart className="text-emerald-600" size={20} />
-          <h3 className="font-bold text-slate-700">Divisão por Família</h3>
+          <h3 className="font-bold text-slate-700">Divisão de Gastos</h3>
         </div>
         <div className="flex items-center gap-1 text-emerald-600 bg-emerald-50 px-2 py-1 rounded-md text-[10px] font-black uppercase tracking-wider">
           <TrendingUp size={12} />
@@ -45,6 +58,11 @@ export function FamilyShare({ data, totalGeral }) {
               <div>
                 <p className="text-sm font-black text-slate-800 uppercase tracking-tight">
                   {family.name}
+                  {family.isSolo && (
+                    <span className="ml-2 text-[9px] text-slate-400 font-normal border border-slate-200 px-1 rounded">
+                      SOLO
+                    </span>
+                  )}
                 </p>
                 <p className="text-[10px] text-slate-400 font-medium">
                   {family.count}{" "}
@@ -64,10 +82,12 @@ export function FamilyShare({ data, totalGeral }) {
               </div>
             </div>
 
-            {/* Barra de Progresso */}
+            {/* Barra de Progresso - Cores diferentes para Solo vs Família (opcional) */}
             <div className="h-3 w-full bg-slate-100 rounded-full overflow-hidden flex">
               <div
-                className="h-full bg-emerald-500 rounded-full transition-all duration-1000 ease-out"
+                className={`h-full rounded-full transition-all duration-1000 ease-out ${
+                  family.isSolo ? "bg-blue-500" : "bg-emerald-500"
+                }`}
                 style={{ width: `${family.percentage}%` }}
               />
             </div>
