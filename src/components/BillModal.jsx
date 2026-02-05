@@ -1,9 +1,9 @@
 import React, { useState, useEffect } from "react";
-import { X, Save, Plus, Calendar, Hash } from "lucide-react"; // Adicionei Hash para o ícone de parcelas
+import { X, Save, Plus, Calendar, Hash } from "lucide-react";
 import { supabase } from "../lib/supabase";
 import { useMembers } from "../hooks/useMembers";
 import { useAddExpense } from "../hooks/useAddExpense";
-import { CATEGORIES } from "../constants/categories"; // Importe as categorias
+import { CATEGORIES } from "../constants/categories";
 
 export function BillModal({
   isOpen,
@@ -23,7 +23,7 @@ export function BillModal({
   const [date, setDate] = useState(new Date().toISOString().split("T")[0]);
   const [selectedMembers, setSelectedMembers] = useState([]);
   const [installments, setInstallments] = useState(1);
-  const [category, setCategory] = useState("other"); // NOVO ESTADO
+  const [category, setCategory] = useState("other");
 
   useEffect(() => {
     if (isOpen) {
@@ -32,9 +32,20 @@ export function BillModal({
         setValue(editingBill.total_value || "");
         setDate(editingBill.due_date || "");
         setType(editingBill.type || "recorrente");
-        setCategory(editingBill.category || "other"); // Carrega categoria
-        // Parcelas e Membros geralmente não são editáveis na edição simples
-        // para manter a integridade do rateio, mas mantemos o estado
+        setCategory(editingBill.category || "other");
+
+        // --- NOVO: Buscar os membros atuais dessa conta ---
+        const fetchCurrentMembers = async () => {
+          const { data } = await supabase
+            .from("expense_splits")
+            .select("profile_id")
+            .eq("expense_id", editingBill.id);
+
+          if (data) {
+            setSelectedMembers(data.map((split) => split.profile_id));
+          }
+        };
+        fetchCurrentMembers();
       } else {
         // Reset para nova despesa
         setDescription("");
@@ -43,7 +54,7 @@ export function BillModal({
         setDate(new Date().toISOString().split("T")[0]);
         setSelectedMembers([]);
         setInstallments(1);
-        setCategory("other"); // Reset categoria
+        setCategory("other");
       }
     }
   }, [isOpen, editingBill]);
@@ -63,26 +74,57 @@ export function BillModal({
       return;
     }
 
+    if (selectedMembers.length === 0) {
+      alert("Selecione pelo menos um participante para o rateio.");
+      return;
+    }
+
     if (editingBill) {
-      // --- LÓGICA DE EDIÇÃO (MANTIDA) ---
+      // --- LÓGICA DE EDIÇÃO ATUALIZADA ---
       setLocalSaving(true);
       try {
-        const { error } = await supabase
+        // 1. Atualiza a conta principal (expenses)
+        const { error: updateError } = await supabase
           .from("expenses")
           .update({
             description,
             total_value: parseFloat(value),
             due_date: date,
-            category: category, // Adicionado
-            // created_by: myUserId, // Geralmente não mudamos o dono na edição
+            category: category,
           })
           .eq("id", editingBill.id);
 
-        if (error) throw error;
+        if (updateError) throw updateError;
+
+        // 2. REFAZ O RATEIO (SPLITS)
+        // Primeiro: Remove os splits antigos (para evitar duplicatas ou sobras)
+        const { error: deleteError } = await supabase
+          .from("expense_splits")
+          .delete()
+          .eq("expense_id", editingBill.id);
+
+        if (deleteError) throw deleteError;
+
+        // Segundo: Cria os novos splits com os membros selecionados
+        const sharePercentage = (100 / selectedMembers.length).toFixed(2);
+
+        const newSplits = selectedMembers.map((memberId) => ({
+          expense_id: editingBill.id,
+          profile_id: memberId,
+          share_percentage: sharePercentage,
+          is_paid: false, // Ao reeditar o rateio, resetamos o status de pagamento por segurança
+        }));
+
+        const { error: insertError } = await supabase
+          .from("expense_splits")
+          .insert(newSplits);
+
+        if (insertError) throw insertError;
 
         onRefresh();
         onClose();
       } catch (err) {
+        console.error(err);
         alert("Erro ao atualizar: " + err.message);
       } finally {
         setLocalSaving(false);
@@ -96,7 +138,7 @@ export function BillModal({
         type,
         installments,
         selectedMembers,
-        category, // Adicionado ao payload do hook
+        category,
         onSuccess: () => {
           onRefresh();
           onClose();
@@ -116,7 +158,7 @@ export function BillModal({
             </h2>
             <p className="text-xs text-slate-500">
               {editingBill
-                ? "Ajuste os detalhes da conta"
+                ? "Ajuste valor, categoria ou participantes"
                 : "Cadastre uma conta para rateio"}
             </p>
           </div>
@@ -129,7 +171,7 @@ export function BillModal({
         </div>
 
         <div className="p-6 space-y-5">
-          {/* 1. SELETOR DE TIPO (Recorrente/Parcelada) - MANTIDO */}
+          {/* 1. SELETOR DE TIPO (Apenas na criação para não quebrar parcelas) */}
           {!editingBill && (
             <div className="flex p-1 bg-slate-100 rounded-xl gap-1">
               {["recorrente", "parcelada"].map((t) => (
@@ -152,7 +194,7 @@ export function BillModal({
             </div>
           )}
 
-          {/* 2. SELETOR DE CATEGORIA (NOVO) */}
+          {/* 2. SELETOR DE CATEGORIA */}
           <div>
             <label className="block text-[10px] font-black text-slate-400 mb-2 uppercase tracking-widest">
               Categoria
@@ -164,7 +206,7 @@ export function BillModal({
                 return (
                   <button
                     key={cat.id}
-                    type="button" // Importante pra não submeter o form
+                    type="button"
                     onClick={() => setCategory(cat.id)}
                     className={`
                       flex flex-col items-center justify-center p-2 rounded-xl border transition-all
@@ -185,7 +227,7 @@ export function BillModal({
             </div>
           </div>
 
-          {/* 3. INPUTS DE TEXTO E VALOR - MANTIDO */}
+          {/* 3. INPUTS DE TEXTO E VALOR */}
           <div className="space-y-4">
             <input
               type="text"
@@ -224,6 +266,7 @@ export function BillModal({
             </div>
           </div>
 
+          {/* 4. PARCELAS (Só aparece na criação parcelada) */}
           {!editingBill && type === "parcelada" && (
             <div className="bg-yellow-50 p-4 rounded-xl border border-yellow-200 animate-in slide-in-from-top-2">
               <label className="block text-xs font-bold text-yellow-700 mb-2 uppercase">
@@ -250,32 +293,30 @@ export function BillModal({
             </div>
           )}
 
-          {/* 5. SELEÇÃO DE MEMBROS (RATEIO) - MANTIDO */}
-          {!editingBill && (
-            <div>
-              <label className="text-[10px] font-black text-slate-400 mb-3 block uppercase tracking-widest">
-                Participantes do Rateio
-              </label>
-              <div className="grid grid-cols-2 gap-2">
-                {members.map((m) => (
-                  <button
-                    key={m.id}
-                    onClick={() => toggleMember(m.id)}
-                    className={`p-2.5 text-xs font-bold rounded-xl border transition-all flex items-center justify-center gap-2 ${
-                      selectedMembers.includes(m.id)
-                        ? "bg-slate-800 text-white border-slate-800"
-                        : "bg-white text-slate-500 border-slate-200 hover:border-slate-400"
-                    }`}
-                  >
-                    {selectedMembers.includes(m.id) && (
-                      <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
-                    )}
-                    {m.full_name}
-                  </button>
-                ))}
-              </div>
+          {/* 5. SELEÇÃO DE MEMBROS (Agora disponível na edição também) */}
+          <div>
+            <label className="text-[10px] font-black text-slate-400 mb-3 block uppercase tracking-widest">
+              Participantes do Rateio {editingBill && "(Editar)"}
+            </label>
+            <div className="grid grid-cols-2 gap-2">
+              {members.map((m) => (
+                <button
+                  key={m.id}
+                  onClick={() => toggleMember(m.id)}
+                  className={`p-2.5 text-xs font-bold rounded-xl border transition-all flex items-center justify-center gap-2 ${
+                    selectedMembers.includes(m.id)
+                      ? "bg-slate-800 text-white border-slate-800"
+                      : "bg-white text-slate-500 border-slate-200 hover:border-slate-400"
+                  }`}
+                >
+                  {selectedMembers.includes(m.id) && (
+                    <div className="w-2 h-2 bg-green-400 rounded-full animate-pulse" />
+                  )}
+                  {m.full_name}
+                </button>
+              ))}
             </div>
-          )}
+          </div>
         </div>
 
         {/* Footer Actions */}
