@@ -88,8 +88,9 @@ export function Dashboard() {
       <Header
         currentMonth={currentMonth}
         setCurrentMonth={setCurrentMonth}
-        myProfile={myProfile}
         onAddBill={() => setIsModalOpen(true)}
+        myProfile={myProfile}
+        onRefresh={fetchMyProfile}
       />
 
       <main className="max-w-4xl mx-auto space-y-6">
