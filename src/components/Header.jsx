@@ -1,6 +1,8 @@
+import React, { useState } from "react"; // Adicionado useState
 import { supabase } from "../lib/supabase";
 import { format, addMonths, subMonths, isSameMonth } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import { useFamily } from "../hooks/useFamily";
 import {
   LogOut,
   Plus,
@@ -10,6 +12,7 @@ import {
   RotateCcw,
   Copy,
   Check,
+  UserMinus,
 } from "lucide-react";
 
 export function Header({
@@ -17,8 +20,35 @@ export function Header({
   setCurrentMonth,
   onAddBill,
   myProfile,
+  onRefresh,
 }) {
   const isToday = isSameMonth(currentMonth, new Date());
+  const { leaveFamily } = useFamily();
+
+  // Estado para feedback do botão de copiar
+  const [copied, setCopied] = useState(false);
+
+  const handleCopyCode = () => {
+    if (!myProfile?.join_code) return;
+    navigator.clipboard.writeText(myProfile.join_code);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000); // Reseta o ícone após 2s
+  };
+
+  const handleLeave = async () => {
+    const confirmed = window.confirm(
+      "Tem certeza que deseja sair da família? Suas contas individuais continuam salvas, mas você não verá mais o rateio do grupo.",
+    );
+
+    if (confirmed) {
+      try {
+        await leaveFamily(myProfile.user_id);
+        onRefresh();
+      } catch (err) {
+        alert("Erro ao sair da família: " + err.message);
+      }
+    }
+  };
 
   return (
     <div className="max-w-4xl mx-auto mb-8 space-y-4">
@@ -34,59 +64,70 @@ export function Header({
         </div>
 
         <div className="flex items-center gap-3 sm:gap-4">
-          <div className="flex flex-col items-end">
-            {" "}
-            {/* Alinhamento total à direita */}
-            {/* Nome do Usuário */}
+          {/* Info do Usuário Alinhada à Direita */}
+          <div className="flex flex-col items-end justify-center">
             <span className="text-sm font-black text-slate-800 leading-tight">
               {myProfile?.full_name?.split(" ")[0] || "Usuário"}
             </span>
-            {/* Grupo: Família + Código */}
+
             <div className="flex items-center gap-2 mt-0.5">
+              {/* Prefixo Fixo "Família" */}
               <span className="text-[10px] text-slate-400 uppercase font-bold tracking-[0.1em]">
-                Família {myProfile?.family_name || "Solo"}
+                {myProfile?.family_name
+                  ? `Família ${myProfile.family_name}`
+                  : "Voo Solo"}
               </span>
 
               {myProfile?.join_code && (
                 <button
-                  onClick={() => {
-                    navigator.clipboard.writeText(myProfile.join_code);
-                    // Aqui você pode disparar um pequeno toast ou apenas o log
-                  }}
-                  className="flex items-center gap-1 bg-slate-100 hover:bg-slate-200 px-1.5 py-0.5 rounded-md transition-all group border border-slate-200/50"
+                  onClick={handleCopyCode}
+                  className={`flex items-center gap-1 px-1.5 py-0.5 rounded-md transition-all border ${
+                    copied
+                      ? "bg-green-50 border-green-200 text-green-600"
+                      : "bg-slate-100 border-slate-200/50 text-slate-500 hover:bg-slate-200"
+                  }`}
                   title="Copiar código da família"
                 >
-                  <span className="text-[9px] font-mono font-bold text-slate-500 group-hover:text-green-600">
+                  <span className="text-[9px] font-mono font-bold">
                     #{myProfile.join_code}
                   </span>
-                  <Copy
-                    size={8}
-                    className="text-slate-400 group-hover:text-green-500"
-                  />
+                  {copied ? <Check size={8} /> : <Copy size={8} />}
                 </button>
               )}
             </div>
           </div>
 
-          {/* Avatar */}
-          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-slate-100 to-slate-200 border-2 border-white shadow-sm flex items-center justify-center text-slate-600 font-black text-xs uppercase">
+          {/* Avatar com Letra Inicial */}
+          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-slate-100 to-slate-200 border-2 border-white shadow-sm flex items-center justify-center text-slate-600 font-black text-xs uppercase select-none">
             {myProfile?.full_name?.charAt(0) || "U"}
           </div>
 
-          {/* Logout */}
-          <button
-            onClick={() => supabase.auth.signOut()}
-            className="p-2 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-full transition-all"
-          >
-            <LogOut size={18} />
-          </button>
+          {/* Ações de Conta */}
+          <div className="flex items-center border-l border-slate-200 ml-1 pl-3 gap-1">
+            {myProfile?.family_id && (
+              <button
+                onClick={handleLeave}
+                className="p-2 text-slate-300 hover:text-amber-600 hover:bg-amber-50 rounded-full transition-all"
+                title="Sair da Família"
+              >
+                <UserMinus size={18} />
+              </button>
+            )}
+
+            <button
+              onClick={() => supabase.auth.signOut()}
+              className="p-2 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-full transition-all"
+              title="Sair do App"
+            >
+              <LogOut size={18} />
+            </button>
+          </div>
         </div>
       </div>
 
-      {/* 2. Control Bar */}
+      {/* 2. Control Bar (Seletor de Mês e Botão Novo) */}
       <div className="bg-white p-2 rounded-2xl shadow-sm border border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-3">
         <div className="flex items-center gap-2 w-full sm:w-auto">
-          {/* Seletor de Mês */}
           <div className="flex items-center bg-slate-50 rounded-xl p-1 flex-1 sm:flex-none">
             <button
               onClick={() => setCurrentMonth(subMonths(currentMonth, 1))}
@@ -107,7 +148,6 @@ export function Header({
             </button>
           </div>
 
-          {/* Botão Voltar para Hoje */}
           {!isToday && (
             <button
               onClick={() => setCurrentMonth(new Date())}
@@ -119,7 +159,6 @@ export function Header({
           )}
         </div>
 
-        {/* Botão de Ação Principal */}
         <button
           onClick={onAddBill}
           className="w-full sm:w-auto bg-green-600 hover:bg-green-700 text-white px-6 py-2.5 rounded-xl font-bold transition-all shadow-md shadow-green-100 flex items-center justify-center gap-2 active:scale-95 group"

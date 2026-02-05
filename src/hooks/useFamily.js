@@ -45,5 +45,14 @@ export function useFamily() {
     return family;
   };
 
-  return { createFamily, joinFamily };
+  const leaveFamily = async (userId) => {
+    const { error } = await supabase
+      .from("profiles")
+      .update({ family_id: null }) // Remove o vínculo
+      .eq("user_id", userId);
+
+    if (error) throw error;
+  };
+
+  return { createFamily, joinFamily, leaveFamily };
 }
