@@ -1,13 +1,30 @@
-import React from "react";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom"; // Importações do Router
+import React, { useEffect } from "react";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
+import { supabase } from "./lib/supabase"; // Importe o client para ouvir o evento
+
+// Páginas
 import { Dashboard } from "./pages/Dashboard.jsx";
 import { Login } from "./pages/Login.jsx";
-import { AdminDashboard } from "./pages/AdminDashboard.jsx"; // Importe a nova página
+import { AdminDashboard } from "./pages/AdminDashboard.jsx";
+import { UpdatePassword } from "./pages/UpdatePassword.jsx"; //
+
 import { useAuth } from "./hooks/useAuth";
 import "./global.css";
 
 export default function App() {
-  const { session, loading, user } = useAuth(); // Certifique-se que useAuth retorna 'user' ou pegue do session
+  const { session, loading } = useAuth();
+
+  useEffect(() => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
+      if (event === "PASSWORD_RECOVERY") {
+        window.location.hash = "/update-password";
+      }
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
 
   if (loading)
     return (
@@ -21,10 +38,7 @@ export default function App() {
     return session ? children : <Navigate to="/login" />;
   };
 
-  // Componente Auxiliar: Protege rotas de Admin
-  // (Opcional: se quiser ser rigoroso no front-end também)
   const AdminRoute = ({ children }) => {
-    // Verifica se existe sessão E se o email/id é o do admin (ou use a role se tiver carregado)
     if (!session) return <Navigate to="/login" />;
     return children;
   };
@@ -32,11 +46,15 @@ export default function App() {
   return (
     <BrowserRouter>
       <Routes>
-        {/* Rota de Login: Se já estiver logado, joga pro Dashboard */}
+        {/* Rota de Login */}
         <Route
           path="/login"
           element={!session ? <Login /> : <Navigate to="/" />}
         />
+
+        {/* --- NOVA ROTA: Atualizar Senha --- */}
+        {/* Não precisa de proteção rígida, pois o link do e-mail já cria uma sessão temporária */}
+        <Route path="/update-password" element={<UpdatePassword />} />
 
         {/* Rota Principal (Dashboard) */}
         <Route
@@ -58,7 +76,7 @@ export default function App() {
           }
         />
 
-        {/* Qualquer url desconhecida volta pro inicio */}
+        {/* Fallback */}
         <Route path="*" element={<Navigate to="/" />} />
       </Routes>
     </BrowserRouter>
