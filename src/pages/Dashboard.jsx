@@ -7,6 +7,7 @@ import { useAuth } from "../hooks/useAuth";
 import { SummaryCard } from "../components/SummaryCard.jsx";
 import { FamilyShare } from "../components/FamilyShare.jsx";
 import { BillsList } from "../components/BillsList.jsx";
+import { MembersList } from "../components/MembersList.jsx";
 import { AddExpenseModal } from "../components/AddExpenseModal.jsx";
 import { Header } from "../components/Header.jsx";
 import { OnboardingBanner } from "../components/OnboardingBanner.jsx";
@@ -139,7 +140,25 @@ export function Dashboard() {
           onRefresh={fetchMonthlyData}
           myUserId={myProfile?.user_id}
         />
-        <FamilyShare data={data} totalGeral={totalGeral} />
+        <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-8">
+          {/* Coluna da Esquerda: Gráficos e Membros (2/3 da tela no desktop) */}
+          <div className="md:col-span-2 space-y-6">
+            <FamilyShare data={data} totalGeral={totalGeral} />
+
+            {/* Nova Lista de Membros */}
+            {myProfile?.family_id && (
+              <MembersList
+                familyId={myProfile.family_id}
+                currentMonth={currentMonth}
+              />
+            )}
+          </div>
+
+          {/* Coluna da Direita: Histórico de Atividades ou Atalhos (1/3) */}
+          <div className="space-y-6">
+            {/* Aqui você pode colocar filtros extras ou um mini calendário futuramente */}
+          </div>
+        </div>
       </main>
     </div>
   );
