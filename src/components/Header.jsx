@@ -7,7 +7,9 @@ import {
   Calendar as CalendarIcon,
   ChevronLeft,
   ChevronRight,
-  RotateCcw, // Ícone para o botão "Hoje"
+  RotateCcw,
+  Copy,
+  Check,
 } from "lucide-react";
 
 export function Header({
@@ -32,34 +34,49 @@ export function Header({
         </div>
 
         <div className="flex items-center gap-3 sm:gap-4">
-          <div className="flex flex-col text-right">
-            {myProfile ? (
-              <>
-                <span className="text-sm font-bold text-slate-700 leading-tight animate-in fade-in duration-500">
-                  {myProfile.full_name?.split(" ")[0]}
-                </span>
-                <span className="text-[10px] text-slate-400 uppercase font-bold tracking-widest">
-                  {myProfile.family_name || "Solo"}
-                </span>
-              </>
-            ) : (
-              /* Skeleton Loading: Uma barrinha cinza que pisca */
-              <div className="space-y-1 animate-pulse">
-                <div className="h-3 w-16 bg-slate-200 rounded"></div>
-                <div className="h-2 w-10 bg-slate-100 rounded ml-auto"></div>
-              </div>
-            )}
+          <div className="flex flex-col items-end">
+            {" "}
+            {/* Alinhamento total à direita */}
+            {/* Nome do Usuário */}
+            <span className="text-sm font-black text-slate-800 leading-tight">
+              {myProfile?.full_name?.split(" ")[0] || "Usuário"}
+            </span>
+            {/* Grupo: Família + Código */}
+            <div className="flex items-center gap-2 mt-0.5">
+              <span className="text-[10px] text-slate-400 uppercase font-bold tracking-[0.1em]">
+                {myProfile?.family_name || "Solo"}
+              </span>
+
+              {myProfile?.join_code && (
+                <button
+                  onClick={() => {
+                    navigator.clipboard.writeText(myProfile.join_code);
+                    // Aqui você pode disparar um pequeno toast ou apenas o log
+                  }}
+                  className="flex items-center gap-1 bg-slate-100 hover:bg-slate-200 px-1.5 py-0.5 rounded-md transition-all group border border-slate-200/50"
+                  title="Copiar código da família"
+                >
+                  <span className="text-[9px] font-mono font-bold text-slate-500 group-hover:text-green-600">
+                    #{myProfile.join_code}
+                  </span>
+                  <Copy
+                    size={8}
+                    className="text-slate-400 group-hover:text-green-500"
+                  />
+                </button>
+              )}
+            </div>
           </div>
 
-          {/* Avatar Simples */}
-          <div className="w-10 h-10 rounded-full bg-slate-200 border-2 border-white shadow-sm flex items-center justify-center text-slate-500 font-bold text-xs uppercase">
+          {/* Avatar */}
+          <div className="w-10 h-10 rounded-full bg-gradient-to-br from-slate-100 to-slate-200 border-2 border-white shadow-sm flex items-center justify-center text-slate-600 font-black text-xs uppercase">
             {myProfile?.full_name?.charAt(0) || "U"}
           </div>
 
+          {/* Logout */}
           <button
             onClick={() => supabase.auth.signOut()}
-            className="p-2 text-slate-400 hover:text-red-500 hover:bg-red-50 rounded-full transition-all"
-            title="Sair"
+            className="p-2 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-full transition-all"
           >
             <LogOut size={18} />
           </button>

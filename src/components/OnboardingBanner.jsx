@@ -98,24 +98,35 @@ export function OnboardingBanner({ userId, onRefresh }) {
               ? "Como se chama sua família?"
               : "Digite o código de convite"}
           </h3>
+
           <div className="flex gap-3">
-            <input
-              autoFocus
-              type="text"
-              placeholder={
-                mode === "create" ? "Ex: Família Mafra" : "Ex: AB12CD"
-              }
-              className="flex-1 bg-slate-800 border border-slate-700 rounded-xl px-4 py-2 outline-none focus:ring-2 focus:ring-green-500"
-              value={inputValue}
-              onChange={(e) => setInputValue(e.target.value)}
-            />
+            {/* Container do Input com Prefixo */}
+            <div className="flex-1 flex items-center bg-slate-800 border border-slate-700 rounded-xl px-4 py-2 focus-within:ring-2 focus-within:ring-green-500 transition-all">
+              {/* Prefixo Visual (Só aparece no modo de criação) */}
+              {mode === "create" && (
+                <span className="text-slate-400 font-bold mr-1.5 select-none">
+                  Família
+                </span>
+              )}
+
+              <input
+                autoFocus
+                type="text"
+                placeholder={mode === "create" ? "Mafra" : "Ex: AB12CD"}
+                className="flex-1 bg-transparent border-none outline-none text-white placeholder:text-slate-600 uppercase"
+                value={inputValue}
+                onChange={(e) => setInputValue(e.target.value)}
+              />
+            </div>
+
             <button
               disabled={loading || !inputValue}
               onClick={handleAction}
-              className="bg-green-600 hover:bg-green-700 disabled:bg-slate-700 px-6 py-2 rounded-xl font-bold transition-all"
+              className="bg-green-600 hover:bg-green-700 disabled:bg-slate-700 px-6 py-2 rounded-xl font-bold transition-all text-white"
             >
               {loading ? "Processando..." : "Confirmar"}
             </button>
+
             <button
               onClick={() => setMode(null)}
               className="text-slate-400 hover:text-white px-2"

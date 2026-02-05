@@ -34,20 +34,20 @@ export function Dashboard() {
         `
       *,
       families (
-        name
+        name,
+        join_code
       )
     `,
       ) // Isso faz um "Join" automático no Supabase
       .eq("user_id", user.id)
-      .single();
+      .maybeSingle();
 
-    if (!error && profile) {
-      // Ajustamos o objeto para o Header entender 'family_name'
-      const profileWithFamily = {
+    if (profile) {
+      setMyProfile({
         ...profile,
-        family_name: profile.families?.name || "Membro Solo",
-      };
-      setMyProfile(profileWithFamily);
+        family_name: profile.families?.name || "Solo",
+        join_code: profile.families?.join_code || null, // <--- Pegando o código aqui
+      });
     }
   }
 
