@@ -9,6 +9,7 @@ import { FamilyShare } from "../components/FamilyShare.jsx";
 import { BillsList } from "../components/BillsList.jsx";
 import { AddExpenseModal } from "../components/AddExpenseModal.jsx";
 import { Header } from "../components/Header.jsx";
+import { OnboardingBanner } from "../components/OnboardingBanner.jsx";
 
 export function Dashboard() {
   const { user } = useAuth();
@@ -92,6 +93,13 @@ export function Dashboard() {
       />
 
       <main className="max-w-4xl mx-auto space-y-6">
+        {/* Banner de Onboarding (Só aparece se o perfil estiver carregado e sem família) */}
+        {!loading && !myProfile?.family_id && (
+          <OnboardingBanner
+            userId={user?.id}
+            onRefresh={fetchMyProfile} // Atualiza o perfil após criar/entrar
+          />
+        )}
         {/* Cards de Resumo */}
         <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
           <SummaryCard
