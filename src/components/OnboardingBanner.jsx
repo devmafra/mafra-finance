@@ -1,13 +1,19 @@
 import React, { useState } from "react";
-import { Users, Plus, DoorOpen, Copy, Check } from "lucide-react";
+import { Users, Plus, DoorOpen, Copy, Check, ArrowLeft } from "lucide-react";
 import { useFamily } from "../hooks/useFamily";
 
 export function OnboardingBanner({ userId, onRefresh }) {
   const { createFamily, joinFamily } = useFamily();
-  const [mode, setMode] = useState(null); // 'create' | 'join' | null
+  const [mode, setMode] = useState(null);
   const [inputValue, setInputValue] = useState("");
   const [loading, setLoading] = useState(false);
   const [generatedCode, setGeneratedCode] = useState("");
+
+  // 1. VALIDAÇÃO: Lógica para habilitar/desabilitar o botão
+  const isInputValid =
+    mode === "create"
+      ? inputValue.trim().length >= 3 // Nome da família: min 3 letras
+      : inputValue.trim().length > 0; // Código: pelo menos 1 caractere
 
   const handleAction = async () => {
     setLoading(true);
@@ -26,7 +32,6 @@ export function OnboardingBanner({ userId, onRefresh }) {
     }
   };
 
-  // Se ele acabou de criar, mostramos o código para ele copiar
   if (generatedCode) {
     return (
       <div className="bg-emerald-600 rounded-2xl p-6 text-white shadow-lg mb-8 animate-in zoom-in-95 duration-300">
@@ -48,7 +53,7 @@ export function OnboardingBanner({ userId, onRefresh }) {
           <button
             onClick={() => {
               navigator.clipboard.writeText(generatedCode);
-              onRefresh(); // Fecha o banner ao atualizar o perfil
+              onRefresh();
             }}
             className="flex items-center gap-2 bg-white text-emerald-600 px-4 py-2 rounded-lg font-bold hover:bg-emerald-50 transition-colors"
           >
@@ -60,8 +65,7 @@ export function OnboardingBanner({ userId, onRefresh }) {
   }
 
   return (
-    <div className="bg-slate-900 rounded-2xl p-6 text-white shadow-xl mb-8 overflow-hidden relative">
-      {/* Background Decorativo */}
+    <div className="bg-slate-900 rounded-2xl p-6 text-white shadow-xl mb-8 overflow-hidden relative border border-slate-800">
       <div className="absolute top-0 right-0 opacity-10 translate-x-1/4 -translate-y-1/4">
         <Users size={200} />
       </div>
@@ -99,40 +103,67 @@ export function OnboardingBanner({ userId, onRefresh }) {
               : "Digite o código de convite"}
           </h3>
 
-          <div className="flex gap-3">
-            {/* Container do Input com Prefixo */}
-            <div className="flex-1 flex items-center bg-slate-800 border border-slate-700 rounded-xl px-4 py-2 focus-within:ring-2 focus-within:ring-green-500 transition-all">
-              {/* Prefixo Visual (Só aparece no modo de criação) */}
-              {mode === "create" && (
-                <span className="text-slate-400 font-bold mr-1.5 select-none">
-                  Família
-                </span>
-              )}
+          {/* 2. VALIDAÇÃO: Container pai para alinhar input + mensagem de erro */}
+          <div className="space-y-2">
+            <div className="flex gap-3">
+              {/* 3. VALIDAÇÃO: Estilo condicional no input (fica âmbar se estiver inválido e o usuário começou a digitar) */}
+              <div
+                className={`flex-1 flex items-center bg-slate-800 border rounded-xl px-4 py-2 transition-all ${
+                  inputValue.length > 0 && !isInputValid && mode === "create"
+                    ? "border-amber-500/50 ring-2 ring-amber-500/20" // Sinal de erro sutil
+                    : "border-slate-700 focus-within:ring-2 focus-within:ring-green-500"
+                }`}
+              >
+                {mode === "create" && (
+                  <span className="text-slate-400 font-bold mr-1.5 select-none">
+                    Família
+                  </span>
+                )}
 
-              <input
-                autoFocus
-                type="text"
-                placeholder={mode === "create" ? "Mafra" : "Ex: AB12CD"}
-                className="flex-1 bg-transparent border-none outline-none text-white placeholder:text-slate-600 uppercase"
-                value={inputValue}
-                onChange={(e) => setInputValue(e.target.value)}
-              />
+                <input
+                  autoFocus
+                  type="text"
+                  placeholder={mode === "create" ? "Mafra" : "Ex: AB12CD"}
+                  className="flex-1 bg-transparent border-none outline-none text-white placeholder:text-slate-600 uppercase"
+                  value={inputValue}
+                  onChange={(e) => setInputValue(e.target.value)}
+                />
+              </div>
+
+              {/* 4. VALIDAÇÃO: Botão desabilitado se não passar na regra */}
+              <button
+                disabled={loading || !isInputValid}
+                onClick={handleAction}
+                className="bg-green-600 hover:bg-green-700 disabled:bg-slate-700 disabled:cursor-not-allowed px-6 py-2 rounded-xl font-bold transition-all text-white"
+              >
+                {loading ? (
+                  "Processando..."
+                ) : (
+                  <>
+                    <Check size={18} />
+                    Confirmar
+                  </>
+                )}
+              </button>
+
+              <button
+                onClick={() => {
+                  setMode(null);
+                  setInputValue("");
+                }}
+                className="flex items-center gap-2 text-slate-400 hover:text-white px-4 py-2 rounded-xl hover:bg-slate-800 transition-all text-sm font-medium"
+              >
+                <ArrowLeft size={16} />
+                Cancelar
+              </button>
             </div>
 
-            <button
-              disabled={loading || !inputValue}
-              onClick={handleAction}
-              className="bg-green-600 hover:bg-green-700 disabled:bg-slate-700 px-6 py-2 rounded-xl font-bold transition-all text-white"
-            >
-              {loading ? "Processando..." : "Confirmar"}
-            </button>
-
-            <button
-              onClick={() => setMode(null)}
-              className="text-slate-400 hover:text-white px-2"
-            >
-              Cancelar
-            </button>
+            {/* 5. VALIDAÇÃO: Texto de ajuda que aparece apenas no erro do nome curto */}
+            {inputValue.length > 0 && !isInputValid && mode === "create" && (
+              <p className="text-[10px] text-amber-500 font-bold uppercase tracking-wider ml-1 animate-in fade-in slide-in-from-top-1">
+                O nome precisa de pelo menos 3 letras
+              </p>
+            )}
           </div>
         </div>
       )}

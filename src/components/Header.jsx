@@ -44,7 +44,7 @@ export function Header({
             {/* Grupo: Família + Código */}
             <div className="flex items-center gap-2 mt-0.5">
               <span className="text-[10px] text-slate-400 uppercase font-bold tracking-[0.1em]">
-                {myProfile?.family_name || "Solo"}
+                Família {myProfile?.family_name || "Solo"}
               </span>
 
               {myProfile?.join_code && (
