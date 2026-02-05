@@ -1,0 +1,77 @@
+import {
+  ShoppingCart,
+  Home,
+  Zap,
+  Car,
+  Utensils,
+  HeartPulse,
+  Gamepad2,
+  MoreHorizontal,
+  GraduationCap,
+} from "lucide-react";
+
+export const CATEGORIES = {
+  market: {
+    id: "market",
+    label: "Mercado",
+    icon: ShoppingCart,
+    color: "bg-orange-100 text-orange-600",
+    border: "border-orange-200",
+  },
+  housing: {
+    id: "housing",
+    label: "Casa",
+    icon: Home,
+    color: "bg-blue-100 text-blue-600",
+    border: "border-blue-200",
+  },
+  utilities: {
+    id: "utilities",
+    label: "Contas",
+    icon: Zap,
+    color: "bg-purple-100 text-purple-600",
+    border: "border-purple-200",
+  },
+  transport: {
+    id: "transport",
+    label: "Carro",
+    icon: Car,
+    color: "bg-green-100 text-green-600",
+    border: "border-green-200",
+  },
+  food: {
+    id: "food",
+    label: "Comida",
+    icon: Utensils,
+    color: "bg-red-100 text-red-600",
+    border: "border-red-200",
+  },
+  health: {
+    id: "health",
+    label: "Saúde",
+    icon: HeartPulse,
+    color: "bg-teal-100 text-teal-600",
+    border: "border-teal-200",
+  },
+  education: {
+    id: "education",
+    label: "Estudo",
+    icon: GraduationCap,
+    color: "bg-indigo-100 text-indigo-600",
+    border: "border-indigo-200",
+  },
+  leisure: {
+    id: "leisure",
+    label: "Lazer",
+    icon: Gamepad2,
+    color: "bg-pink-100 text-pink-600",
+    border: "border-pink-200",
+  },
+  other: {
+    id: "other",
+    label: "Outros",
+    icon: MoreHorizontal,
+    color: "bg-slate-100 text-slate-600",
+    border: "border-slate-200",
+  },
+};

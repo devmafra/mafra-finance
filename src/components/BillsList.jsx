@@ -2,7 +2,7 @@ import React from "react";
 import { Trash2, CheckCircle, Circle, Calendar, Pencil } from "lucide-react";
 import { supabase } from "../lib/supabase";
 import { format, parseISO, isPast, isToday } from "date-fns";
-import { ptBR } from "date-fns/locale";
+import { CATEGORIES } from "../constants/categories"; // <--- 1. Importei aqui
 
 export function BillsList({ loading, data, onRefresh, myUserId, onEdit }) {
   // Filtramos apenas o que pertence ao usuário logado
@@ -73,6 +73,12 @@ export function BillsList({ loading, data, onRefresh, myUserId, onEdit }) {
             const isOverdue =
               isPast(dueDate) && !isToday(dueDate) && !item.is_paid;
 
+            // --- 2. Resolvemos a Categoria e o Ícone ---
+            // Se não tiver categoria salva, usa 'other'
+            const categoryConfig =
+              CATEGORIES[item.category] || CATEGORIES.other;
+            const CategoryIcon = categoryConfig.icon;
+
             return (
               <div
                 key={item.expense_id}
@@ -87,7 +93,11 @@ export function BillsList({ loading, data, onRefresh, myUserId, onEdit }) {
                         item.is_paid,
                       )
                     }
-                    className={`transition-colors ${item.is_paid ? "text-green-500" : "text-slate-300 hover:text-amber-500"}`}
+                    className={`transition-colors ${
+                      item.is_paid
+                        ? "text-green-500"
+                        : "text-slate-300 hover:text-amber-500"
+                    }`}
                   >
                     {item.is_paid ? (
                       <CheckCircle size={22} />
@@ -96,13 +106,26 @@ export function BillsList({ loading, data, onRefresh, myUserId, onEdit }) {
                     )}
                   </button>
 
+                  {/* --- 3. Renderizamos o Ícone Colorido Aqui --- */}
+                  <div
+                    className={`p-2.5 rounded-xl ${categoryConfig.color} bg-opacity-50 hidden sm:block`}
+                  >
+                    <CategoryIcon size={20} />
+                  </div>
+
                   <div>
                     <p
-                      className={`font-bold text-sm ${item.is_paid ? "text-slate-400 line-through" : "text-slate-800"}`}
+                      className={`font-bold text-sm ${
+                        item.is_paid
+                          ? "text-slate-400 line-through"
+                          : "text-slate-800"
+                      }`}
                     >
                       {item.description}
                     </p>
                     <div className="flex items-center gap-2 mt-1">
+                      {/* Ícone pequeno para mobile se quiser, ou mantém só no desktop acima */}
+
                       <span className="text-[10px] bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded font-medium">
                         Total: R$ {item.expense_total?.toFixed(2)}
                       </span>
@@ -129,22 +152,29 @@ export function BillsList({ loading, data, onRefresh, myUserId, onEdit }) {
                       Minha Parte
                     </p>
                     <p
-                      className={`font-black text-base ${item.is_paid ? "text-slate-400" : isOverdue ? "text-red-600" : "text-amber-600"}`}
+                      className={`font-black text-base ${
+                        item.is_paid
+                          ? "text-slate-400"
+                          : isOverdue
+                            ? "text-red-600"
+                            : "text-amber-600"
+                      }`}
                     >
                       R$ {item.share_amount.toFixed(2)}
                     </p>
                   </div>
 
                   <div className="flex items-center gap-1">
-                    {/* Botão Editar: Passamos o objeto mapeado para o modal entender */}
+                    {/* Botão Editar */}
                     <button
                       onClick={() =>
                         onEdit({
                           id: item.expense_id,
                           description: item.description,
-                          total_value: item.expense_total, // Mapeado de expense_total para total_value
+                          total_value: item.expense_total,
                           due_date: item.due_date,
                           type: item.type,
+                          category: item.category, // <--- 4. Passamos a categoria para o modal de edição
                         })
                       }
                       className="opacity-0 group-hover:opacity-100 p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"

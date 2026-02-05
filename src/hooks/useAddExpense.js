@@ -11,6 +11,7 @@ export function useAddExpense() {
     type,
     installments,
     selectedMembers,
+    category = "other",
     onSuccess,
   }) => {
     const totalValue = parseFloat(value);
@@ -46,6 +47,7 @@ export function useAddExpense() {
               due_date: dateStr,
               billing_month: dateStr.substring(0, 7) + "-01",
               type: type,
+              category: category,
             },
           ])
           .select()
