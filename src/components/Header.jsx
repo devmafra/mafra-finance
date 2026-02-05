@@ -3,6 +3,7 @@ import { supabase } from "../lib/supabase";
 import { format, addMonths, subMonths, isSameMonth } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import { useFamily } from "../hooks/useFamily";
+import { useNavigate } from "react-router-dom";
 import {
   LogOut,
   Plus,
@@ -13,6 +14,7 @@ import {
   Copy,
   Check,
   UserMinus,
+  ShieldAlert,
 } from "lucide-react";
 
 export function Header({
@@ -24,6 +26,7 @@ export function Header({
 }) {
   const isToday = isSameMonth(currentMonth, new Date());
   const { leaveFamily } = useFamily();
+  const navigate = useNavigate();
 
   // Estado para feedback do botão de copiar
   const [copied, setCopied] = useState(false);
@@ -111,6 +114,16 @@ export function Header({
                 title="Sair da Família"
               >
                 <UserMinus size={18} />
+              </button>
+            )}
+
+            {myProfile?.role === "admin" && (
+              <button
+                onClick={() => navigate("/admin")}
+                className="p-2 bg-slate-800 text-yellow-400 rounded-full hover:bg-slate-700 hover:scale-105 transition-all shadow-lg shadow-purple-500/20"
+                title="Painel Admin"
+              >
+                <ShieldAlert size={18} />
               </button>
             )}
 
