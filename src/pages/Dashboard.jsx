@@ -20,6 +20,7 @@ export function Dashboard() {
   const [loading, setLoading] = useState(true);
   const [editingBill, setEditingBill] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [refreshTrigger, setRefreshTrigger] = useState(0);
 
   useEffect(() => {
     if (user) {
@@ -96,6 +97,12 @@ export function Dashboard() {
     setIsModalOpen(false);
   };
 
+  const handleRefreshAll = () => {
+    // 1. Atualiza a lista de contas
+    fetchMonthlyData();
+    // 2. Incrementa o gatilho para os membros
+    setRefreshTrigger((prev) => prev + 1);
+  };
   return (
     <div className="min-h-screen bg-slate-50 p-4 md:p-8">
       <Header
@@ -151,7 +158,7 @@ export function Dashboard() {
         <BillsList
           data={data}
           loading={loading}
-          onRefresh={fetchMonthlyData}
+          onRefresh={handleRefreshAll}
           myUserId={myProfile?.user_id}
           onEdit={handleEditBill}
         />
@@ -165,6 +172,7 @@ export function Dashboard() {
               <MembersList
                 familyId={myProfile.family_id}
                 currentMonth={currentMonth}
+                refreshTrigger={refreshTrigger}
               />
             )}
           </div>

@@ -10,15 +10,16 @@ import {
   AlertTriangle,
 } from "lucide-react";
 
-export function MembersList({ familyId, currentMonth }) {
+export function MembersList({ familyId, currentMonth, refreshTrigger }) {
   const [members, setMembers] = useState([]);
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
     if (familyId) fetchMembers();
-  }, [familyId, currentMonth]);
+  }, [familyId, currentMonth, refreshTrigger]);
 
   async function fetchMembers() {
+    setLoading(true);
     try {
       // 1. Busca os membros da família
       const { data: profiles, error: pError } = await supabase
@@ -65,8 +66,8 @@ export function MembersList({ familyId, currentMonth }) {
     }
   }
 
-  if (loading)
-    return <div className="h-20 animate-pulse bg-slate-100 rounded-xl" />;
+  // if (loading)
+  //   return <div className="h-20 animate-pulse bg-slate-100 rounded-xl" />;
 
   return (
     <div className="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
