@@ -63,7 +63,7 @@ export function Header({
           </h1>
         </div>
 
-        <div className="flex items-center gap-3 sm:gap-4">
+        <div className="flex items-center gap-3 sm:gap-4 ">
           {/* Info do Usuário Alinhada à Direita */}
           <div className="flex flex-col items-end justify-center">
             <span className="text-sm font-black text-slate-800 leading-tight">
@@ -72,7 +72,7 @@ export function Header({
 
             <div className="flex items-center gap-2 mt-0.5">
               {/* Prefixo Fixo "Família" */}
-              <span className="text-[10px] text-slate-400 uppercase font-bold tracking-[0.1em]">
+              <span className="text-[10px] text-slate-400 uppercase font-bold tracking-[0.1em] text-right">
                 {myProfile?.family_name
                   ? `Família ${myProfile.family_name}`
                   : "Voo Solo"}
