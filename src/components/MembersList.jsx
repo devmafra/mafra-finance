@@ -1,11 +1,13 @@
 import React, { useEffect, useState } from "react";
 import { supabase } from "../lib/supabase";
+import { parseISO, isPast, isToday } from "date-fns";
 import {
   User,
   ShieldCheck,
   Clock,
   CheckCircle2,
   AlertCircle,
+  AlertTriangle,
 } from "lucide-react";
 
 export function MembersList({ familyId, currentMonth }) {
@@ -30,20 +32,29 @@ export function MembersList({ familyId, currentMonth }) {
       // Usamos a view que já tem o RLS configurado
       const { data: shares, error: sError } = await supabase
         .from("vw_member_shares")
-        .select("profile_id, is_paid")
+        .select("profile_id, is_paid, due_date")
         .eq("billing_month", `${currentMonth.toISOString().slice(0, 7)}-01`);
       if (sError) throw sError;
 
       // 3. Cruza os dados: Membro + Status de Pendência
       const membersWithStatus = profiles.map((member) => {
         const memberShares = shares.filter((s) => s.profile_id === member.id);
-        const hasPending = memberShares.some((s) => !s.is_paid);
         const hasBills = memberShares.length > 0;
 
-        return {
-          ...member,
-          status: !hasBills ? "no_bills" : hasPending ? "pending" : "paid",
-        };
+        const hasOverdue = memberShares.some((s) => {
+          const dueDate = parseISO(s.due_date);
+          return !s.is_paid && isPast(dueDate) && !isToday(dueDate);
+        });
+
+        const hasPending = memberShares.some((s) => !s.is_paid);
+
+        let status = "paid";
+        if (!hasBills) status = "no_bills";
+        else if (hasOverdue)
+          status = "overdue"; // Atrasado (Vermelho)
+        else if (hasPending) status = "pending"; // Pendente (Amarelo)
+
+        return { ...member, status };
       });
 
       setMembers(membersWithStatus);
@@ -76,8 +87,7 @@ export function MembersList({ familyId, currentMonth }) {
             className="flex items-center justify-between p-3 rounded-xl border border-slate-50 hover:bg-slate-50 transition-all group"
           >
             <div className="flex items-center gap-3">
-              {/* Avatar com Letra */}
-              <div className="w-10 h-10 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-600 font-bold text-sm uppercase group-hover:border-green-200 group-hover:bg-white transition-all">
+              <div className="w-10 h-10 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-600 font-bold text-sm uppercase group-hover:border-green-200 transition-all">
                 {member.full_name?.charAt(0)}
               </div>
 
@@ -100,18 +110,27 @@ export function MembersList({ familyId, currentMonth }) {
               </div>
             </div>
 
-            {/* Badge de Status Financeiro */}
             <div className="flex items-center gap-1.5">
               {member.status === "paid" && (
                 <div className="flex items-center gap-1 text-emerald-600 bg-emerald-50 px-2 py-1 rounded-lg text-[9px] font-black uppercase">
                   <CheckCircle2 size={12} /> Em dia
                 </div>
               )}
+
+              {/* STATUS PENDENTE (Ainda não venceu) */}
               {member.status === "pending" && (
-                <div className="flex items-center gap-1 text-amber-600 bg-amber-50 px-2 py-1 rounded-lg text-[9px] font-black uppercase animate-pulse">
-                  <AlertCircle size={12} /> Pendente
+                <div className="flex items-center gap-1 text-amber-600 bg-amber-50 px-2 py-1 rounded-lg text-[9px] font-black uppercase">
+                  <Clock size={12} /> Aberta
                 </div>
               )}
+
+              {/* STATUS ATRASADO (Vencido) */}
+              {member.status === "overdue" && (
+                <div className="flex items-center gap-1 text-red-600 bg-red-50 px-2 py-1 rounded-lg text-[9px] font-black uppercase animate-pulse">
+                  <AlertTriangle size={12} /> Atrasado
+                </div>
+              )}
+
               {member.status === "no_bills" && (
                 <div className="flex items-center gap-1 text-slate-400 bg-slate-50 px-2 py-1 rounded-lg text-[9px] font-black uppercase">
                   <Clock size={12} /> Sem contas
