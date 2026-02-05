@@ -1,10 +1,11 @@
 import React from "react";
-import { Trash2, CheckCircle, Circle, Calendar } from "lucide-react";
+import { Trash2, CheckCircle, Circle, Calendar, Pencil } from "lucide-react";
 import { supabase } from "../lib/supabase";
 import { format, parseISO, isPast, isToday } from "date-fns";
 import { ptBR } from "date-fns/locale";
 
-export function BillsList({ loading, data, onRefresh, myUserId }) {
+export function BillsList({ loading, data, onRefresh, myUserId, onEdit }) {
+  // Filtramos apenas o que pertence ao usuário logado
   const myShares = data.filter((item) => item.user_id === myUserId);
 
   async function handleDelete(expenseId, description) {
@@ -21,7 +22,7 @@ export function BillsList({ loading, data, onRefresh, myUserId }) {
       if (error) {
         alert("Erro ao deletar: " + error.message);
       } else {
-        onRefresh(); // Atualiza o Dashboard
+        onRefresh();
       }
     }
   }
@@ -39,7 +40,7 @@ export function BillsList({ loading, data, onRefresh, myUserId }) {
     if (error) {
       alert("Erro ao atualizar status: " + error.message);
     } else {
-      onRefresh(); // Atualiza o Dashboard
+      onRefresh();
     }
   }
 
@@ -68,7 +69,6 @@ export function BillsList({ loading, data, onRefresh, myUserId }) {
           </div>
         ) : (
           myShares.map((item) => {
-            // Lógica de Data
             const dueDate = parseISO(item.due_date);
             const isOverdue =
               isPast(dueDate) && !isToday(dueDate) && !item.is_paid;
@@ -106,7 +106,6 @@ export function BillsList({ loading, data, onRefresh, myUserId }) {
                       <span className="text-[10px] bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded font-medium">
                         Total: R$ {item.expense_total?.toFixed(2)}
                       </span>
-                      {/* Badge da Data de Vencimento */}
                       <span
                         className={`text-[10px] px-1.5 py-0.5 rounded font-bold flex items-center gap-1 ${
                           item.is_paid
@@ -136,14 +135,34 @@ export function BillsList({ loading, data, onRefresh, myUserId }) {
                     </p>
                   </div>
 
-                  <button
-                    onClick={() =>
-                      handleDelete(item.expense_id, item.description)
-                    }
-                    className="opacity-0 group-hover:opacity-100 p-2 text-slate-300 hover:text-red-500 transition-all"
-                  >
-                    <Trash2 size={16} />
-                  </button>
+                  <div className="flex items-center gap-1">
+                    {/* Botão Editar: Passamos o objeto mapeado para o modal entender */}
+                    <button
+                      onClick={() =>
+                        onEdit({
+                          id: item.expense_id,
+                          description: item.description,
+                          total_value: item.expense_total, // Mapeado de expense_total para total_value
+                          due_date: item.due_date,
+                          type: item.type,
+                        })
+                      }
+                      className="opacity-0 group-hover:opacity-100 p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
+                      title="Editar conta"
+                    >
+                      <Pencil size={16} />
+                    </button>
+
+                    <button
+                      onClick={() =>
+                        handleDelete(item.expense_id, item.description)
+                      }
+                      className="opacity-0 group-hover:opacity-100 p-2 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
+                      title="Excluir conta"
+                    >
+                      <Trash2 size={16} />
+                    </button>
+                  </div>
                 </div>
               </div>
             );

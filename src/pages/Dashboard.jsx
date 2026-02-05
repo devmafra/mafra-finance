@@ -8,7 +8,7 @@ import { SummaryCard } from "../components/SummaryCard.jsx";
 import { FamilyShare } from "../components/FamilyShare.jsx";
 import { BillsList } from "../components/BillsList.jsx";
 import { MembersList } from "../components/MembersList.jsx";
-import { AddExpenseModal } from "../components/AddExpenseModal.jsx";
+import { BillModal } from "../components/BillModal.jsx";
 import { Header } from "../components/Header.jsx";
 import { OnboardingBanner } from "../components/OnboardingBanner.jsx";
 
@@ -18,6 +18,7 @@ export function Dashboard() {
   const [currentMonth, setCurrentMonth] = useState(new Date(2026, 1, 1)); // Fev 2026 (mesmo do seed)
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
+  const [editingBill, setEditingBill] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
 
   useEffect(() => {
@@ -84,6 +85,17 @@ export function Dashboard() {
     )
     .reduce((acc, item) => acc + item.share_amount, 0);
 
+  // Bill Modal
+  const handleEditBill = (bill) => {
+    setEditingBill(bill);
+    setIsModalOpen(true);
+  };
+
+  const handleCloseModal = () => {
+    setEditingBill(null);
+    setIsModalOpen(false);
+  };
+
   return (
     <div className="min-h-screen bg-slate-50 p-4 md:p-8">
       <Header
@@ -129,16 +141,19 @@ export function Dashboard() {
           />
         </div>
 
-        <AddExpenseModal
+        <BillModal
           isOpen={isModalOpen}
-          onClose={() => setIsModalOpen(false)}
+          onClose={handleCloseModal}
+          editingBill={editingBill}
           onRefresh={fetchMonthlyData}
+          myUserId={myProfile?.user_id}
         />
         <BillsList
           data={data}
           loading={loading}
           onRefresh={fetchMonthlyData}
           myUserId={myProfile?.user_id}
+          onEdit={handleEditBill}
         />
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-8">
           {/* Coluna da Esquerda: Gráficos e Membros (2/3 da tela no desktop) */}
