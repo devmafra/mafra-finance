@@ -22,25 +22,30 @@ export function MembersList({ familyId, currentMonth, refreshTrigger }) {
   useEffect(() => {
     if (!familyId) return;
 
-    const channel = supabase
-      .channel("schema-db-changes")
+    const familyChannel = supabase
+      .channel("family-sync")
       .on(
         "postgres_changes",
         {
           event: "*",
           schema: "public",
           table: "profiles",
-          filter: `family_id=eq.${familyId}`,
+          // Removemos o filter daqui para poder ouvir a "saída" também
         },
-        () => {
-          // Quando alguém entrar, disparar o refresh que o seu outro useEffect já ouve
-          onRefresh();
+        (payload) => {
+          // Checamos se a pessoa que mudou ERA da nossa família ou ESTÁ entrando nela
+          const wasInFamily = payload.old?.family_id === familyId;
+          const isInFamily = payload.new?.family_id === familyId;
+
+          if (wasInFamily || isInFamily) {
+            fetchMembers();
+          }
         },
       )
       .subscribe();
 
     return () => {
-      supabase.removeChannel(channel);
+      supabase.removeChannel(familyChannel);
     };
   }, [familyId]);
 

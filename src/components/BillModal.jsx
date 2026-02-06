@@ -293,6 +293,8 @@ export function BillModal({
             </div>
           )}
 
+          {/*  */}
+
           {/* 5. SELEÇÃO DE MEMBROS (Agora disponível na edição também) */}
           <div>
             <label className="text-[10px] font-black text-slate-400 mb-3 block uppercase tracking-widest">
