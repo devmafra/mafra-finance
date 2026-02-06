@@ -73,6 +73,14 @@ export function BillsList({ loading, data, onRefresh, myUserId, onEdit }) {
             const isOverdue =
               isPast(dueDate) && !isToday(dueDate) && !item.is_paid;
 
+            // 1. Definição das permissões
+            const isOwner = expense.user_id === myProfile?.user_id;
+            const isLeader = myProfile?.role === "leader";
+            const isAdmin = myProfile?.role === "admin";
+
+            // Só pode deletar se for o dono, o líder da família ou o admin do sistema
+            const canDelete = isOwner || isLeader || isAdmin;
+
             // --- 2. Resolvemos a Categoria e o Ícone ---
             // Se não tiver categoria salva, usa 'other'
             const categoryConfig =
@@ -183,15 +191,17 @@ export function BillsList({ loading, data, onRefresh, myUserId, onEdit }) {
                       <Pencil size={16} />
                     </button>
 
-                    <button
-                      onClick={() =>
-                        handleDelete(item.expense_id, item.description)
-                      }
-                      className="group-hover:opacity-100 p-2 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
-                      title="Excluir conta"
-                    >
-                      <Trash2 size={16} />
-                    </button>
+                    {canDelete && (
+                      <button
+                        onClick={() =>
+                          handleDelete(item.expense_id, item.description)
+                        }
+                        className="group-hover:opacity-100 p-2 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
+                        title="Excluir conta"
+                      >
+                        <Trash2 size={16} />
+                      </button>
+                    )}
                   </div>
                 </div>
               </div>
