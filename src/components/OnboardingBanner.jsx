@@ -1,5 +1,14 @@
 import React, { useState } from "react";
-import { Users, Plus, DoorOpen, Copy, Check, ArrowLeft } from "lucide-react";
+import { supabase } from "../lib/supabase";
+import {
+  Users,
+  Plus,
+  DoorOpen,
+  Copy,
+  Check,
+  ArrowLeft,
+  Loader2,
+} from "lucide-react";
 import { useFamily } from "../hooks/useFamily";
 
 export function OnboardingBanner({ userId, onRefresh }) {
@@ -19,14 +28,42 @@ export function OnboardingBanner({ userId, onRefresh }) {
     setLoading(true);
     try {
       if (mode === "create") {
-        const { joinCode } = await createFamily(userId, inputValue);
+        const joinCode = Math.random()
+          .toString(36)
+          .substring(2, 8)
+          .toUpperCase();
+
+        // 2. CRIA A FAMÍLIA
+        const { data: newFamily, error: createError } = await supabase
+          .from("families")
+          .insert({
+            name: inputValue,
+            join_code: joinCode,
+          })
+          .select()
+          .single();
+
+        if (createError) throw createError;
+
+        // 3. ATUALIZA O PERFIL
+        const { error: updateError } = await supabase
+          .from("profiles")
+          .update({
+            family_id: newFamily.id,
+            role: "admin",
+          })
+          .eq("user_id", userId);
+
+        if (updateError) throw updateError;
+
+        // 4. DEFINE O CÓDIGO PARA MOSTRAR NA TELA DE SUCESSO
         setGeneratedCode(joinCode);
       } else {
         await joinFamily(userId, inputValue);
         onRefresh();
       }
     } catch (err) {
-      alert(err.message);
+      alert("Erro: " + err.message);
     } finally {
       setLoading(false);
     }
