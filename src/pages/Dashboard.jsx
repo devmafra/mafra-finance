@@ -160,6 +160,7 @@ export function Dashboard() {
           loading={loading}
           onRefresh={handleRefreshAll}
           myUserId={myProfile?.user_id}
+          myRole={myProfile?.role}
           onEdit={handleEditBill}
         />
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-8">

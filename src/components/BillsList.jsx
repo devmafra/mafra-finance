@@ -4,7 +4,14 @@ import { supabase } from "../lib/supabase";
 import { format, parseISO, isPast, isToday } from "date-fns";
 import { CATEGORIES } from "../constants/categories"; // <--- 1. Importei aqui
 
-export function BillsList({ loading, data, onRefresh, myUserId, onEdit }) {
+export function BillsList({
+  loading,
+  data,
+  onRefresh,
+  myUserId,
+  myRole,
+  onEdit,
+}) {
   // Filtramos apenas o que pertence ao usuário logado
   const myShares = data.filter((item) => item.user_id === myUserId);
 
@@ -74,9 +81,9 @@ export function BillsList({ loading, data, onRefresh, myUserId, onEdit }) {
               isPast(dueDate) && !isToday(dueDate) && !item.is_paid;
 
             // 1. Definição das permissões
-            const isOwner = expense.user_id === myProfile?.user_id;
-            const isLeader = myProfile?.role === "leader";
-            const isAdmin = myProfile?.role === "admin";
+            const isOwner = item.user_id === myUserId;
+            const isLeader = myRole === "leader";
+            const isAdmin = myRole === "admin";
 
             // Só pode deletar se for o dono, o líder da família ou o admin do sistema
             const canDelete = isOwner || isLeader || isAdmin;

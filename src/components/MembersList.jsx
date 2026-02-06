@@ -19,6 +19,31 @@ export function MembersList({ familyId, currentMonth, refreshTrigger }) {
     if (familyId) fetchMembers();
   }, [familyId, currentMonth, refreshTrigger]);
 
+  useEffect(() => {
+    if (!familyId) return;
+
+    const channel = supabase
+      .channel("schema-db-changes")
+      .on(
+        "postgres_changes",
+        {
+          event: "*",
+          schema: "public",
+          table: "profiles",
+          filter: `family_id=eq.${familyId}`,
+        },
+        () => {
+          // Quando alguém entrar, disparar o refresh que o seu outro useEffect já ouve
+          onRefresh();
+        },
+      )
+      .subscribe();
+
+    return () => {
+      supabase.removeChannel(channel);
+    };
+  }, [familyId]);
+
   async function fetchMembers() {
     setLoading(true);
     try {
