@@ -177,7 +177,7 @@ export function BillsList({ loading, data, onRefresh, myUserId, onEdit }) {
                           category: item.category, // <--- 4. Passamos a categoria para o modal de edição
                         })
                       }
-                      className="opacity-0 group-hover:opacity-100 p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
+                      className="group-hover:opacity-100 p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
                       title="Editar conta"
                     >
                       <Pencil size={16} />
@@ -187,7 +187,7 @@ export function BillsList({ loading, data, onRefresh, myUserId, onEdit }) {
                       onClick={() =>
                         handleDelete(item.expense_id, item.description)
                       }
-                      className="opacity-0 group-hover:opacity-100 p-2 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
+                      className="group-hover:opacity-100 p-2 text-slate-300 hover:text-red-500 hover:bg-red-50 rounded-lg transition-all"
                       title="Excluir conta"
                     >
                       <Trash2 size={16} />

@@ -8,12 +8,14 @@ import {
   CheckCircle,
   UserPlus,
   LogIn,
+  User,
 } from "lucide-react";
 
 export function Login() {
   const [loading, setLoading] = useState(false);
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
+  const [fullName, setFullName] = useState("");
 
   // Estados de Controle da Tela
   const [isSignUp, setIsSignUp] = useState(false); // Alterna entre Login e Criar Conta
@@ -30,12 +32,17 @@ export function Login() {
         const { error } = await supabase.auth.signUp({
           email,
           password,
+          options: {
+            data: {
+              full_name: fullName,
+            },
+          },
         });
         if (error) throw error;
         alert(
           "Cadastro realizado! Verifique seu e-mail para confirmar a conta.",
         );
-        setIsSignUp(false); // Volta para login após cadastrar
+        setIsSignUp(false);
       } else {
         // --- MODO LOGIN ---
         const { error } = await supabase.auth.signInWithPassword({
@@ -155,7 +162,27 @@ export function Login() {
                   {isSignUp ? "Crie sua Conta" : "Bem-vindo de volta"}
                 </h2>
               </div>
-
+              {isSignUp && (
+                <div className="animate-in slide-in-from-top-2 duration-200">
+                  <label className="block text-sm font-medium text-slate-700 mb-1">
+                    Nome Completo
+                  </label>
+                  <div className="relative">
+                    <User
+                      className="absolute left-3 top-3 text-slate-400"
+                      size={18}
+                    />
+                    <input
+                      type="text"
+                      required
+                      placeholder="Como quer ser chamado?"
+                      className="w-full pl-10 p-3 bg-slate-50 border border-slate-200 rounded-xl focus:ring-2 focus:ring-blue-500 outline-none transition-all"
+                      value={fullName}
+                      onChange={(e) => setFullName(e.target.value)}
+                    />
+                  </div>
+                </div>
+              )}
               <div>
                 <label className="block text-sm font-medium text-slate-700 mb-1">
                   E-mail
@@ -165,6 +192,7 @@ export function Login() {
                     className="absolute left-3 top-3 text-slate-400"
                     size={18}
                   />
+
                   <input
                     type="email"
                     required
