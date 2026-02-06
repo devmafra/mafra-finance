@@ -65,8 +65,8 @@ export function OnboardingBanner({ userId, onRefresh }) {
   }
 
   return (
-    <div className="bg-slate-900 rounded-2xl p-6 text-white shadow-xl mb-8 overflow-hidden relative border border-slate-800">
-      <div className="absolute top-0 right-0 opacity-10 translate-x-1/4 -translate-y-1/4">
+    <div className="bg-slate-900 rounded-2xl p-5 md:p-6 text-white shadow-xl mb-8 overflow-hidden relative border border-slate-800">
+      <div className="absolute top-0 right-0 opacity-10 translate-x-1/4 -translate-y-1/4 pointer-events-none">
         <Users size={200} />
       </div>
 
@@ -80,42 +80,41 @@ export function OnboardingBanner({ userId, onRefresh }) {
               Crie uma família para dividir contas ou entre em uma existente.
             </p>
           </div>
-          <div className="flex gap-3 w-full md:w-auto">
+          <div className="flex flex-col sm:flex-row gap-3 w-full md:w-auto">
             <button
               onClick={() => setMode("create")}
-              className="flex-1 md:flex-none bg-green-600 hover:bg-green-700 text-white px-6 py-2.5 rounded-xl font-bold transition-all flex items-center justify-center gap-2"
+              className="w-full sm:flex-1 md:flex-none bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-xl font-bold transition-all flex items-center justify-center gap-2"
             >
               <Plus size={18} /> Criar Família
             </button>
             <button
               onClick={() => setMode("join")}
-              className="flex-1 md:flex-none bg-slate-800 hover:bg-slate-700 text-white px-6 py-2.5 rounded-xl font-bold transition-all flex items-center justify-center gap-2"
+              className="w-full sm:flex-1 md:flex-none bg-slate-800 hover:bg-slate-700 text-white px-6 py-3 rounded-xl font-bold transition-all flex items-center justify-center gap-2"
             >
               <DoorOpen size={18} /> Tenho um Código
             </button>
           </div>
         </div>
       ) : (
-        <div className="relative z-10 animate-in slide-in-from-right-4 duration-300">
-          <h3 className="text-lg font-bold mb-4">
+        <div className="relative z-10">
+          <h3 className="text-lg font-bold mb-4 text-center md:text-left">
             {mode === "create"
               ? "Como se chama sua família?"
               : "Digite o código de convite"}
           </h3>
 
-          {/* 2. VALIDAÇÃO: Container pai para alinhar input + mensagem de erro */}
-          <div className="space-y-2">
-            <div className="flex gap-3">
-              {/* 3. VALIDAÇÃO: Estilo condicional no input (fica âmbar se estiver inválido e o usuário começou a digitar) */}
+          <div className="space-y-4">
+            {/* Container do Input e Botões adaptável */}
+            <div className="flex flex-col md:flex-row gap-3">
               <div
-                className={`flex-1 flex items-center bg-slate-800 border rounded-xl px-4 py-2 transition-all ${
+                className={`flex-1 flex items-center bg-slate-800 border rounded-xl px-4 py-3 transition-all ${
                   inputValue.length > 0 && !isInputValid && mode === "create"
-                    ? "border-amber-500/50 ring-2 ring-amber-500/20" // Sinal de erro sutil
+                    ? "border-amber-500/50 ring-2 ring-amber-500/20"
                     : "border-slate-700 focus-within:ring-2 focus-within:ring-green-500"
                 }`}
               >
                 {mode === "create" && (
-                  <span className="text-slate-400 font-bold mr-1.5 select-none">
+                  <span className="text-slate-400 font-bold mr-2 select-none whitespace-nowrap">
                     Família
                   </span>
                 )}
@@ -123,44 +122,46 @@ export function OnboardingBanner({ userId, onRefresh }) {
                 <input
                   autoFocus
                   type="text"
-                  placeholder={mode === "create" ? "Mafra" : "Ex: AB12CD"}
+                  placeholder={mode === "create" ? "Ex: Mafra" : "Ex: AB12CD"}
                   className="flex-1 bg-transparent border-none outline-none text-white placeholder:text-slate-600 uppercase"
                   value={inputValue}
                   onChange={(e) => setInputValue(e.target.value)}
                 />
               </div>
 
-              {/* 4. VALIDAÇÃO: Botão desabilitado se não passar na regra */}
-              <button
-                disabled={loading || !isInputValid}
-                onClick={handleAction}
-                className="flex items-center gap-2 bg-green-600 hover:bg-green-700 disabled:bg-slate-700 disabled:cursor-not-allowed px-6 py-2 rounded-xl font-bold transition-all text-white"
-              >
-                {loading ? (
-                  "Processando..."
-                ) : (
-                  <>
-                    <Check size={18} />
-                    Confirmar
-                  </>
-                )}
-              </button>
+              {/* Ações: Confirmar e Cancelar */}
+              <div className="flex gap-2 w-full md:w-auto">
+                <button
+                  disabled={loading || !isInputValid}
+                  onClick={handleAction}
+                  className="flex-1 md:flex-none flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 disabled:bg-slate-700 disabled:cursor-not-allowed px-6 py-3 rounded-xl font-bold transition-all text-white"
+                >
+                  {loading ? (
+                    <Loader2 className="animate-spin" size={18} />
+                  ) : (
+                    <>
+                      <Check size={18} />
+                      Confirmar
+                    </>
+                  )}
+                </button>
 
-              <button
-                onClick={() => {
-                  setMode(null);
-                  setInputValue("");
-                }}
-                className="flex items-center gap-2 text-slate-400 hover:text-white px-6 py-2 rounded-xl hover:bg-slate-800 transition-all text-sm font-medium"
-              >
-                <ArrowLeft size={16} />
-                Cancelar
-              </button>
+                <button
+                  onClick={() => {
+                    setMode(null);
+                    setInputValue("");
+                  }}
+                  className="flex-1 md:flex-none flex items-center justify-center gap-2 text-slate-400 hover:text-white px-4 py-3 rounded-xl hover:bg-slate-800 transition-all text-sm font-medium"
+                >
+                  <ArrowLeft size={16} />
+                  <span className="md:hidden">Sair</span>
+                  <span className="hidden md:inline">Cancelar</span>
+                </button>
+              </div>
             </div>
 
-            {/* 5. VALIDAÇÃO: Texto de ajuda que aparece apenas no erro do nome curto */}
             {inputValue.length > 0 && !isInputValid && mode === "create" && (
-              <p className="text-[10px] text-amber-500 font-bold uppercase tracking-wider ml-1 animate-in fade-in slide-in-from-top-1">
+              <p className="text-[10px] text-amber-500 font-bold uppercase tracking-wider ml-1 text-center md:text-left">
                 O nome precisa de pelo menos 3 letras
               </p>
             )}
