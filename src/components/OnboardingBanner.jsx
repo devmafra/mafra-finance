@@ -71,31 +71,47 @@ export function OnboardingBanner({ userId, onRefresh }) {
 
   if (generatedCode) {
     return (
-      <div className="bg-emerald-600 rounded-2xl p-6 text-white shadow-lg mb-8 animate-in zoom-in-95 duration-300">
-        <div className="flex items-center gap-4 mb-4">
-          <div className="bg-white/20 p-3 rounded-full">
-            <Check size={24} />
-          </div>
-          <div>
-            <h3 className="text-xl font-bold">Família Criada com Sucesso!</h3>
-            <p className="text-emerald-100 text-sm">
-              Compartilhe o código abaixo com os outros membros.
-            </p>
-          </div>
+      <div className="bg-emerald-600 rounded-2xl p-5 md:p-6 text-white shadow-lg mb-8 relative overflow-hidden">
+        {/* Detalhe visual de fundo para parecer mais "Premium" */}
+        <div className="absolute top-0 right-0 opacity-10 translate-x-1/4 -translate-y-1/4 pointer-events-none">
+          <Check size={160} />
         </div>
-        <div className="bg-white/10 p-4 rounded-xl flex items-center justify-between border border-white/20">
-          <span className="font-mono text-2xl tracking-widest font-black">
-            {generatedCode}
-          </span>
-          <button
-            onClick={() => {
-              navigator.clipboard.writeText(generatedCode);
-              onRefresh();
-            }}
-            className="flex items-center gap-2 bg-white text-emerald-600 px-4 py-2 rounded-lg font-bold hover:bg-emerald-50 transition-colors"
-          >
-            <Copy size={18} /> Copiar e Começar
-          </button>
+
+        <div className="relative z-10">
+          <div className="flex flex-col sm:flex-row items-center sm:items-start gap-4 mb-6 text-center sm:text-left">
+            <div className="bg-white/20 p-3 rounded-full shrink-0">
+              <Check size={28} className="text-white" />
+            </div>
+            <div>
+              <h3 className="text-xl font-bold">Família Criada! 🏠</h3>
+              <p className="text-emerald-100 text-sm">
+                Compartilhe o código abaixo para que outros membros possam
+                entrar.
+              </p>
+            </div>
+          </div>
+
+          <div className="flex flex-col gap-3 bg-black/20 p-4 rounded-2xl border border-white/10">
+            <div className="flex flex-col items-center justify-center py-2">
+              <span className="text-emerald-200 text-[10px] uppercase font-bold tracking-[0.2em] mb-1">
+                Código de Convite
+              </span>
+              <span className="font-mono text-4xl tracking-[0.3em] font-black text-white">
+                {generatedCode}
+              </span>
+            </div>
+
+            <button
+              onClick={() => {
+                navigator.clipboard.writeText(generatedCode);
+                onRefresh();
+              }}
+              className="w-full flex items-center justify-center gap-2 bg-white text-emerald-700 px-6 py-4 rounded-xl font-bold hover:bg-emerald-50 active:scale-95 transition-all shadow-md"
+            >
+              <Copy size={20} />
+              <span>Copiar e Começar</span>
+            </button>
+          </div>
         </div>
       </div>
     );
