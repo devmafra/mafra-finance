@@ -50,7 +50,7 @@ export function OnboardingBanner({ userId, onRefresh }) {
           .from("profiles")
           .update({
             family_id: newFamily.id,
-            role: "admin",
+            role: "leader",
           })
           .eq("user_id", userId);
 

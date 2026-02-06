@@ -8,6 +8,7 @@ import {
   CheckCircle2,
   AlertCircle,
   AlertTriangle,
+  Crown,
 } from "lucide-react";
 
 export function MembersList({ familyId, currentMonth, refreshTrigger }) {
@@ -88,29 +89,57 @@ export function MembersList({ familyId, currentMonth, refreshTrigger }) {
             className="flex items-center justify-between p-3 rounded-xl border border-slate-50 hover:bg-slate-50 transition-all group"
           >
             <div className="flex items-center gap-3">
-              <div className="w-10 h-10 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-600 font-bold text-sm uppercase group-hover:border-green-200 transition-all">
-                {member.full_name?.charAt(0)}
+              {/* Avatar com Badge de Role */}
+              <div className="relative">
+                <div className="w-10 h-10 rounded-full bg-slate-100 border border-slate-200 flex items-center justify-center text-slate-600 font-bold text-sm uppercase group-hover:border-green-200 transition-all shrink-0">
+                  {member.full_name?.charAt(0)}
+                </div>
+
+                {/* Badge flutuante para Admin ou Leader */}
+                {member.role === "admin" && (
+                  <div
+                    className="absolute -top-1 -right-1 bg-purple-600 text-white p-0.5 rounded-full border-2 border-white"
+                    title="Dono da Casa"
+                  >
+                    <ShieldCheck size={10} />
+                  </div>
+                )}
+                {member.role === "leader" && (
+                  <div
+                    className="absolute -top-1 -right-1 bg-amber-400 text-white p-0.5 rounded-full border-2 border-white"
+                    title="Líder da Família"
+                  >
+                    <Crown size={10} />
+                  </div>
+                )}
               </div>
 
               <div>
-                <div className="flex items-center gap-1">
+                <div className="flex items-center gap-1.5">
                   <span className="text-sm font-bold text-slate-700">
                     {member.full_name}
                   </span>
+
+                  {/* Rótulo de texto discreto para o Role */}
                   {member.role === "admin" && (
-                    <ShieldCheck
-                      size={12}
-                      className="text-amber-500"
-                      title="Administrador"
-                    />
+                    <span className="text-[8px] bg-purple-100 text-purple-700 px-1.5 py-0.5 rounded-md font-black uppercase tracking-wider">
+                      Admin
+                    </span>
+                  )}
+                  {member.role === "leader" && (
+                    <span className="text-[8px] bg-amber-100 text-amber-700 px-1.5 py-0.5 rounded-md font-black uppercase tracking-wider">
+                      Líder
+                    </span>
                   )}
                 </div>
+
                 <span className="text-[10px] text-slate-400 font-medium">
                   {member.user_id ? "Conta Ativa" : "Aguardando Vínculo"}
                 </span>
               </div>
             </div>
 
+            {/* Mantive sua lógica de Status de Pagamento intacta */}
             <div className="flex items-center gap-1.5">
               {member.status === "paid" && (
                 <div className="flex items-center gap-1 text-emerald-600 bg-emerald-50 px-2 py-1 rounded-lg text-[9px] font-black uppercase">
@@ -118,14 +147,12 @@ export function MembersList({ familyId, currentMonth, refreshTrigger }) {
                 </div>
               )}
 
-              {/* STATUS PENDENTE (Ainda não venceu) */}
               {member.status === "pending" && (
                 <div className="flex items-center gap-1 text-amber-600 bg-amber-50 px-2 py-1 rounded-lg text-[9px] font-black uppercase">
                   <Clock size={12} /> Aberta
                 </div>
               )}
 
-              {/* STATUS ATRASADO (Vencido) */}
               {member.status === "overdue" && (
                 <div className="flex items-center gap-1 text-red-600 bg-red-50 px-2 py-1 rounded-lg text-[9px] font-black uppercase animate-pulse">
                   <AlertTriangle size={12} /> Atrasado
