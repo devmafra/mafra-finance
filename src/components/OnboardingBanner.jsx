@@ -1,14 +1,5 @@
 import React, { useState } from "react";
-import { supabase } from "../lib/supabase";
-import {
-  Users,
-  Plus,
-  DoorOpen,
-  Copy,
-  Check,
-  ArrowLeft,
-  Loader2,
-} from "lucide-react";
+import { Users, Plus, DoorOpen, Copy, Check, Loader2 } from "lucide-react";
 import { useFamily } from "../hooks/useFamily";
 
 export function OnboardingBanner({ userId, onRefresh }) {
@@ -18,47 +9,20 @@ export function OnboardingBanner({ userId, onRefresh }) {
   const [loading, setLoading] = useState(false);
   const [generatedCode, setGeneratedCode] = useState("");
 
-  // 1. VALIDAÇÃO: Lógica para habilitar/desabilitar o botão
   const isInputValid =
     mode === "create"
-      ? inputValue.trim().length >= 3 // Nome da família: min 3 letras
-      : inputValue.trim().length > 0; // Código: pelo menos 1 caractere
+      ? inputValue.trim().length >= 3
+      : inputValue.trim().length > 0;
 
   const handleAction = async () => {
     setLoading(true);
     try {
       if (mode === "create") {
-        const joinCode = Math.random()
-          .toString(36)
-          .substring(2, 8)
-          .toUpperCase();
-
-        // 2. CRIA A FAMÍLIA
-        const { data: newFamily, error: createError } = await supabase
-          .from("families")
-          .insert({
-            name: inputValue,
-            join_code: joinCode,
-          })
-          .select()
-          .single();
-
-        if (createError) throw createError;
-
-        // 3. ATUALIZA O PERFIL
-        const { error: updateError } = await supabase
-          .from("profiles")
-          .update({
-            family_id: newFamily.id,
-            role: "leader",
-          })
-          .eq("user_id", userId);
-
-        if (updateError) throw updateError;
-
-        // 4. DEFINE O CÓDIGO PARA MOSTRAR NA TELA DE SUCESSO
-        setGeneratedCode(joinCode);
+        // Agora usamos a lógica centralizada do hook
+        const { inviteCode } = await createFamily(userId, inputValue);
+        setGeneratedCode(inviteCode);
       } else {
+        // O joinFamily agora já herda o house_id automaticamente
         await joinFamily(userId, inputValue);
         onRefresh();
       }
@@ -69,10 +33,10 @@ export function OnboardingBanner({ userId, onRefresh }) {
     }
   };
 
+  // Tela de Sucesso (Exibe o código gerado)
   if (generatedCode) {
     return (
       <div className="bg-emerald-600 rounded-2xl p-5 md:p-6 text-white shadow-lg mb-8 relative overflow-hidden">
-        {/* Detalhe visual de fundo para parecer mais "Premium" */}
         <div className="absolute top-0 right-0 opacity-10 translate-x-1/4 -translate-y-1/4 pointer-events-none">
           <Check size={160} />
         </div>
@@ -85,8 +49,8 @@ export function OnboardingBanner({ userId, onRefresh }) {
             <div>
               <h3 className="text-xl font-bold">Família Criada! 🏠</h3>
               <p className="text-emerald-100 text-sm">
-                Compartilhe o código abaixo para que outros membros possam
-                entrar.
+                Compartilhe o código abaixo para que outros membros entrem na
+                sua casa.
               </p>
             </div>
           </div>
@@ -94,7 +58,7 @@ export function OnboardingBanner({ userId, onRefresh }) {
           <div className="flex flex-col gap-3 bg-black/20 p-4 rounded-2xl border border-white/10">
             <div className="flex flex-col items-center justify-center py-2">
               <span className="text-emerald-200 text-[10px] uppercase font-bold tracking-[0.2em] mb-1">
-                Código de Convite
+                Código de Convite Único
               </span>
               <span className="font-mono text-4xl tracking-[0.3em] font-black text-white">
                 {generatedCode}
@@ -104,7 +68,7 @@ export function OnboardingBanner({ userId, onRefresh }) {
             <button
               onClick={() => {
                 navigator.clipboard.writeText(generatedCode);
-                onRefresh();
+                onRefresh(); // Isso vai disparar o fetch e esconder o banner no Dashboard
               }}
               className="w-full flex items-center justify-center gap-2 bg-white text-emerald-700 px-6 py-4 rounded-xl font-bold hover:bg-emerald-50 active:scale-95 transition-all shadow-md"
             >
@@ -119,7 +83,6 @@ export function OnboardingBanner({ userId, onRefresh }) {
 
   return (
     <div className="bg-slate-900 rounded-2xl p-5 md:p-8 text-white shadow-xl mb-8 overflow-hidden relative border border-slate-800">
-      {/* Ícone de fundo decorativo */}
       <div className="absolute top-0 right-0 opacity-10 translate-x-1/4 -translate-y-1/4 pointer-events-none">
         <Users size={200} />
       </div>
@@ -131,11 +94,10 @@ export function OnboardingBanner({ userId, onRefresh }) {
               Você está voando solo! 🚀
             </h3>
             <p className="text-slate-400 text-sm">
-              Crie uma família para dividir contas ou entre em uma existente.
+              Crie uma família para sua casa ou utilize um código de convite.
             </p>
           </div>
 
-          {/* Container de Botões: Agora com flex-wrap para garantir que NADA suma */}
           <div className="flex flex-col sm:flex-row flex-wrap gap-3 w-full lg:w-auto">
             <button
               onClick={() => setMode("create")}
@@ -145,7 +107,6 @@ export function OnboardingBanner({ userId, onRefresh }) {
               <span>Criar Família</span>
             </button>
 
-            {/* RECOLOCADO: Botão de Código que tinha sumido na imagem */}
             <button
               onClick={() => setMode("join")}
               className="flex-1 lg:flex-none bg-slate-800 hover:bg-slate-700 text-white px-6 py-3 rounded-xl font-bold transition-all flex items-center justify-center gap-2 border border-slate-700 active:scale-95"
@@ -158,9 +119,7 @@ export function OnboardingBanner({ userId, onRefresh }) {
       ) : (
         <div className="relative z-10 animate-in fade-in duration-300">
           <h3 className="text-lg font-bold mb-4 text-center md:text-left">
-            {mode === "create"
-              ? "Como se chama sua família?"
-              : "Digite o código de convite"}
+            {mode === "create" ? "Nome da Família" : "Código de Convite"}
           </h3>
 
           <div className="space-y-4">
@@ -172,9 +131,8 @@ export function OnboardingBanner({ userId, onRefresh }) {
                     : "border-slate-700 focus-within:ring-2 focus-within:ring-green-500"
                 }`}
               >
-                {/* Ícone dinâmico no campo: Ajuda a saber que você está "Entrando" */}
                 {mode === "create" ? (
-                  <span className="text-slate-400 font-bold mr-2 select-none">
+                  <span className="text-slate-400 font-bold mr-2 select-none whitespace-nowrap">
                     Família
                   </span>
                 ) : (
@@ -195,7 +153,7 @@ export function OnboardingBanner({ userId, onRefresh }) {
                 <button
                   disabled={loading || !isInputValid}
                   onClick={handleAction}
-                  className="flex-1 md:flex-none flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 disabled:bg-slate-700 px-6 py-3 rounded-xl font-bold transition-all"
+                  className="flex-1 md:flex-none flex items-center justify-center gap-2 bg-green-600 hover:bg-green-700 disabled:bg-slate-700 px-6 py-3 rounded-xl font-bold transition-all text-white"
                 >
                   {loading ? (
                     <Loader2 className="animate-spin" size={18} />
