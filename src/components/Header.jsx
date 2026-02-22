@@ -1,4 +1,4 @@
-import React, { useState } from "react"; // Adicionado useState
+import React, { useState } from "react";
 import { supabase } from "../lib/supabase";
 import { format, addMonths, subMonths, isSameMonth } from "date-fns";
 import { ptBR } from "date-fns/locale";
@@ -28,14 +28,14 @@ export function Header({
   const { leaveFamily } = useFamily();
   const navigate = useNavigate();
 
-  // Estado para feedback do botão de copiar
   const [copied, setCopied] = useState(false);
 
+  // Alterado para invite_code
   const handleCopyCode = () => {
-    if (!myProfile?.join_code) return;
-    navigator.clipboard.writeText(myProfile.join_code);
+    if (!myProfile?.invite_code) return;
+    navigator.clipboard.writeText(myProfile.invite_code);
     setCopied(true);
-    setTimeout(() => setCopied(false), 2000); // Reseta o ícone após 2s
+    setTimeout(() => setCopied(false), 2000);
   };
 
   const handleLeave = async () => {
@@ -55,9 +55,7 @@ export function Header({
 
   return (
     <div className="max-w-4xl mx-auto mb-8 space-y-4">
-      {/* 1. Top Bar: Otimizado para mobile */}
       <div className="flex flex-wrap items-center justify-between gap-2 sm:gap-4 px-2 sm:px-0">
-        {/* Logo: Mantida original, sem esconder letras */}
         <div className="flex items-center gap-2 shrink-0">
           <div className="bg-green-600 p-2 rounded-lg shadow-inner">
             <CalendarIcon className="text-white w-4 sm:w-5 h-4 sm:h-5" />
@@ -67,9 +65,7 @@ export function Header({
           </h1>
         </div>
 
-        {/* Bloco de Perfil e Ações */}
         <div className="flex items-center gap-1.5 sm:gap-4 ml-auto">
-          {/* Info do Usuário */}
           <div className="flex flex-col items-end justify-center min-w-0">
             <span className="text-xs sm:text-sm font-black text-slate-800 leading-tight truncate">
               {myProfile?.full_name?.split(" ")[0] || "Usuário"}
@@ -77,22 +73,23 @@ export function Header({
 
             <div className="flex items-center gap-1 sm:gap-2 mt-0.5 flex-wrap justify-end">
               <span className="text-[9px] sm:text-[10px] text-slate-400 uppercase font-bold tracking-[0.05em] sm:tracking-[0.1em] text-right">
-                {myProfile?.family_name !== "Solo"
-                  ? `Fam. ${myProfile?.family_name}`
+                {myProfile?.family_id
+                  ? `${myProfile?.family_name || "Carregando..."}`
                   : "Voo Solo"}
               </span>
 
-              {myProfile?.join_code && (
+              {/* Alterado para invite_code */}
+              {myProfile?.invite_code && (
                 <button
                   onClick={handleCopyCode}
-                  className={`flex items-center gap-0.5 sm:gap-1 px-1 sm:px-1.5 py-0.5 rounded-md transition-all border text-nowrap ${
+                  className={`flex items-center gap-0.5 sm:gap-1 px-1.5 py-0.5 rounded-md transition-all border text-nowrap ${
                     copied
                       ? "bg-green-50 border-green-200 text-green-600"
                       : "bg-slate-100 border-slate-200/50 text-slate-500 hover:bg-slate-200"
                   }`}
                 >
-                  <span className="text-[8px] sm:text-[9px] font-mono font-bold">
-                    #{myProfile.join_code}
+                  <span className="text-[8px] sm:text-[9px] font-mono font-bold uppercase">
+                    #{myProfile.invite_code}
                   </span>
                   {copied ? <Check size={10} /> : <Copy size={10} />}
                 </button>
@@ -100,12 +97,10 @@ export function Header({
             </div>
           </div>
 
-          {/* Avatar */}
           <div className="w-8 sm:w-10 h-8 sm:h-10 shrink-0 rounded-full bg-gradient-to-br from-slate-100 to-slate-200 border-2 border-white shadow-sm flex items-center justify-center text-slate-600 font-black text-[10px] sm:text-xs uppercase select-none">
             {myProfile?.full_name?.charAt(0) || "U"}
           </div>
 
-          {/* Ações de Conta */}
           <div className="flex items-center border-l border-slate-200 ml-0.5 sm:ml-1 pl-1 sm:pl-3 gap-0 sm:gap-1">
             {myProfile?.family_id && (
               <button
@@ -138,7 +133,6 @@ export function Header({
         </div>
       </div>
 
-      {/* 2. Control Bar */}
       <div className="bg-white p-2 sm:p-3 rounded-2xl shadow-sm border border-slate-100 flex flex-col sm:flex-row items-center justify-between gap-2 sm:gap-3">
         <div className="flex items-center gap-1.5 sm:gap-2 w-full sm:w-auto">
           <div className="flex items-center bg-slate-50 rounded-xl p-1 flex-1 sm:flex-none justify-between sm:justify-start">

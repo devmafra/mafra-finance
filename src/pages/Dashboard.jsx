@@ -35,13 +35,13 @@ export function Dashboard() {
       .from("profiles")
       .select(
         `
-      *,
-      families (
-        name,
-        join_code
-      )
-    `,
-      ) // Isso faz um "Join" automático no Supabase
+        *,
+        families (
+          name,
+          invite_code
+        )
+      `,
+      ) // Mudamos de join_code para invite_code aqui
       .eq("user_id", user.id)
       .maybeSingle();
 
@@ -49,7 +49,7 @@ export function Dashboard() {
       setMyProfile({
         ...profile,
         family_name: profile.families?.name || "Solo",
-        join_code: profile.families?.join_code || null, // <--- Pegando o código aqui
+        invite_code: profile.families?.invite_code || null, // Atualizado para o novo nome
       });
     }
   }
