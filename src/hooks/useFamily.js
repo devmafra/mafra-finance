@@ -58,14 +58,14 @@ export function useFamily() {
 
       if (famError || !family) throw new Error("Código de convite inválido.");
 
-      const { data: leader } = await supabase
+      const { data: existingBoss } = await supabase
         .from("profiles")
         .select("id")
         .eq("family_id", family.id)
-        .eq("role", "leader")
+        .in("role", ["admin", "leader"])
         .maybeSingle();
 
-      const assignedRole = leader ? "member" : "leader";
+      const assignedRole = existingBoss ? "member" : "leader";
 
       const { error: profError } = await supabase
         .from("profiles")
