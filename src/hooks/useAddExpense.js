@@ -16,7 +16,6 @@ export function useAddExpense() {
   }) => {
     const totalInput = parseFloat(value);
 
-    // Validação básica
     if (!description || !totalInput || selectedMembers.length === 0) {
       alert("Preencha descrição, valor e participantes!");
       return;
@@ -25,41 +24,47 @@ export function useAddExpense() {
     setIsSaving(true);
 
     try {
-      // 1. Pega o usuário logado
+      // 1. Pega o usuário logado e seu PERFIL (para ter family_id e house_id)
       const {
         data: { user },
       } = await supabase.auth.getUser();
       if (!user) throw new Error("Usuário não autenticado");
 
+      // BUSCA OS DADOS DE HIERARQUIA DO PERFIL
+      const { data: profile, error: profileError } = await supabase
+        .from("profiles")
+        .select("family_id, house_id")
+        .eq("user_id", user.id)
+        .single();
+
+      if (profileError || !profile.family_id || !profile.house_id) {
+        throw new Error(
+          "Você precisa estar em uma família para lançar despesas.",
+        );
+      }
+
       // 2. Define parcelas
       const numInstallments =
         type === "parcelada" ? parseInt(installments) || 2 : 1;
-
-      // 3. Calcula o valor de cada parcela (Valor Total / Num Parcelas)
       const valuePerInstallment =
         type === "parcelada" ? totalInput / numInstallments : totalInput;
-
-      // 4. Calcula a porcentagem de divisão (Isso é igual para todas as parcelas)
-      // Ex: 2 pessoas = 50.00
       const sharePercentage = (100 / selectedMembers.length).toFixed(2);
 
       // LOOP DE CRIAÇÃO
       for (let i = 0; i < numInstallments; i++) {
-        // Ajusta Data
         const currentDueDate = new Date(date);
-        currentDueDate.setDate(currentDueDate.getDate() + 1); // Compensação Fuso
+        currentDueDate.setDate(currentDueDate.getDate() + 1);
         currentDueDate.setMonth(currentDueDate.getMonth() + i);
 
         const dateStr = currentDueDate.toISOString().split("T")[0];
-        const billingMonth = dateStr.substring(0, 7) + "-01"; // "2026-02-01"
+        const billingMonth = dateStr.substring(0, 7) + "-01";
 
-        // Descrição
         const displayDescription =
           type === "parcelada"
             ? `${description} (${i + 1}/${numInstallments})`
             : description;
 
-        // A. INSERE A DESPESA
+        // A. INSERE A DESPESA COM OS NOVOS CAMPOS
         const { data: expense, error: expError } = await supabase
           .from("expenses")
           .insert([
@@ -71,6 +76,9 @@ export function useAddExpense() {
               type: type,
               category: category,
               created_by: user.id,
+              // --- VÍNCULOS DE HIERARQUIA ---
+              family_id: profile.family_id,
+              house_id: profile.house_id,
             },
           ])
           .select()
@@ -78,11 +86,11 @@ export function useAddExpense() {
 
         if (expError) throw expError;
 
-        // B. INSERE OS RATEIOS (SPLITS) - CORRIGIDO AQUI
+        // B. INSERE OS RATEIOS (SPLITS)
         const splits = selectedMembers.map((memberId) => ({
           expense_id: expense.id,
           profile_id: memberId,
-          share_percentage: sharePercentage, // <--- Voltamos a usar porcentagem
+          share_percentage: sharePercentage,
           is_paid: false,
         }));
 
