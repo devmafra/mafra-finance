@@ -163,6 +163,7 @@ export function Dashboard() {
           myRole={myProfile?.role}
           onEdit={handleEditBill}
         />
+
         <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mt-8">
           {/* Coluna da Esquerda: Gráficos e Membros (2/3 da tela no desktop) */}
           <div className="md:col-span-2 space-y-6">
