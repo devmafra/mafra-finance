@@ -17,7 +17,12 @@ import { useAuth } from "../hooks/useAuth";
 export function AdminDashboard() {
   const navigate = useNavigate();
   const { user } = useAuth();
-  const [activeTab, setActiveTab] = useState("expenses"); // 'expenses', 'users' ou 'families'
+
+  // 1. MEMÓRIA DA ABA: Inicializa pegando do LocalStorage
+  const [activeTab, setActiveTab] = useState(() => {
+    return localStorage.getItem("admin_active_tab") || "expenses";
+  });
+
   const [data, setData] = useState([]);
   const [loading, setLoading] = useState(true);
   const [searchTerm, setSearchTerm] = useState("");
@@ -26,9 +31,14 @@ export function AdminDashboard() {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [editingBill, setEditingBill] = useState(null);
 
+  // 2. SALVAR ABA: Sempre que mudar, grava no navegador
+  useEffect(() => {
+    localStorage.setItem("admin_active_tab", activeTab);
+  }, [activeTab]);
+
   useEffect(() => {
     if (user) fetchAdminHouse();
-    if (activeTab !== "families") fetchData(); // Não busca dados de tabela se for a aba de famílias
+    if (activeTab !== "families") fetchData();
   }, [activeTab, user]);
 
   async function fetchAdminHouse() {
@@ -64,7 +74,7 @@ export function AdminDashboard() {
         setData(result);
       }
     } catch (err) {
-      alert("Erro ao carregar dados: " + err.message);
+      console.error(err);
     } finally {
       setLoading(false);
     }
