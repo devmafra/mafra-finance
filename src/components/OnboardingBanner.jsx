@@ -117,12 +117,12 @@ export function OnboardingBanner({ userId, onRefresh }) {
             </p>
           </div>
           <div className="flex flex-col sm:flex-row gap-3 w-full lg:w-auto">
-            <button
+            {/*<button
               onClick={() => setMode("create")}
-              className="flex-1 lg:flex-none bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-xl font-bold transition-all flex items-center justify-center gap-2 active:scale-95 disabled"
+              className="flex-1 lg:flex-none bg-green-600 hover:bg-green-700 text-white px-6 py-3 rounded-xl font-bold transition-all flex items-center justify-center gap-2 active:scale-95"
             >
               <Plus size={18} /> Criar Casa e Família
-            </button>
+            </button>*/}
             <button
               onClick={() => setMode("join")}
               className="flex-1 lg:flex-none bg-slate-800 hover:bg-slate-700 text-white px-6 py-3 rounded-xl font-bold transition-all flex items-center justify-center gap-2 border border-slate-700 active:scale-95"
