@@ -73,10 +73,27 @@ export function Login() {
 
   return (
     <div className="flex min-h-screen items-center justify-center bg-slate-100 p-4">
-      <div className="w-full max-w-md bg-white rounded-2xl shadow-xl overflow-hidden border border-slate-200">
-        <div className="bg-slate-900 p-8 text-center">
-          <h1 className="text-3xl font-bold text-white mb-2">MafraFinance</h1>
-          <p className="text-slate-400 text-sm">
+      {/* O mt-12 compensa a logo que vai "subir" para fora do card */}
+      <div className="w-full max-w-md bg-white rounded-2xl shadow-xl overflow-visible border border-slate-200 relative mt-12">
+        {/* MUDANÇA 1: Logo centralizada na borda superior */}
+        <div className="absolute -top-12 left-1/2 -translate-x-1/2 z-20">
+          <div className="relative">
+            {/* Círculo de brilho ao fundo da logo (opcional, dá um tchan) */}
+            <div className="absolute inset-0 bg-green-500/20 blur-xl rounded-full"></div>
+            <img
+              src="/mafra-finance-logo.png"
+              alt="MafraFinance Logo"
+              className="h-24 w-24 rounded-full border-4 border-white shadow-2xl bg-slate-900 relative z-10"
+            />
+          </div>
+        </div>
+
+        {/* MUDANÇA 2: Header mais curto e com padding superior para o texto não bater na logo */}
+        <div className="bg-slate-900 pt-16 pb-6 px-8 text-center rounded-t-2xl">
+          <h1 className="text-2xl font-black text-white tracking-tight">
+            Mafra<span className="text-green-500">Finance</span>
+          </h1>
+          <p className="text-slate-400 text-xs uppercase tracking-widest font-medium mt-1">
             Controle familiar inteligente
           </p>
         </div>
