@@ -8,6 +8,7 @@ import {
   Sparkles,
   Trash2,
   Loader2,
+  User, // Novo ícone
 } from "lucide-react";
 import { useFamily } from "../hooks/useFamily";
 
@@ -16,20 +17,28 @@ export function AdminFamilyManager({ houseId, onRefresh }) {
   const [name, setName] = useState("");
   const [loading, setLoading] = useState(false);
   const [fetching, setFetching] = useState(true);
-  const [families, setFamilies] = useState([]); // Lista de famílias existentes
+  const [families, setFamilies] = useState([]);
   const [createdFamily, setCreatedFamily] = useState(null);
   const [copied, setCopied] = useState(false);
 
-  // 1. Busca as famílias ao carregar ou quando houseId mudar
   useEffect(() => {
     if (houseId) fetchFamilies();
   }, [houseId]);
 
   async function fetchFamilies() {
     setFetching(true);
+    // 1. MUDANÇA AQUI: Buscamos a família e seus perfis (membros) relacionados
     const { data, error } = await supabase
       .from("families")
-      .select("*")
+      .select(
+        `
+        *,
+        profiles (
+          full_name,
+          role
+        )
+      `,
+      )
       .eq("house_id", houseId)
       .order("name");
 
@@ -44,7 +53,7 @@ export function AdminFamilyManager({ houseId, onRefresh }) {
       const family = await addFamilyToHouse(houseId, name);
       setCreatedFamily(family);
       setName("");
-      fetchFamilies(); // Atualiza a lista local
+      fetchFamilies();
       if (onRefresh) onRefresh();
     } catch (err) {
       alert("Erro: " + err.message);
@@ -67,7 +76,7 @@ export function AdminFamilyManager({ houseId, onRefresh }) {
       if (error) {
         alert("Erro ao deletar: " + error.message);
       } else {
-        fetchFamilies(); // Atualiza a lista
+        fetchFamilies();
         if (onRefresh) onRefresh();
       }
     }
@@ -81,7 +90,7 @@ export function AdminFamilyManager({ houseId, onRefresh }) {
 
   return (
     <div className="space-y-6">
-      {/* SEÇÃO: CRIAR NOVA FAMÍLIA */}
+      {/* SEÇÃO: CRIAR NOVA FAMÍLIA (Mantida igual) */}
       <div className="bg-white rounded-2xl p-6 border-2 border-purple-100 shadow-sm">
         <div className="flex items-center gap-2 mb-4">
           <div className="bg-purple-100 p-2 rounded-lg text-purple-600">
@@ -120,7 +129,7 @@ export function AdminFamilyManager({ houseId, onRefresh }) {
             </button>
           </div>
         ) : (
-          <div className="bg-purple-50 border border-purple-100 rounded-xl p-4 flex flex-col sm:flex-row items-center justify-between gap-4 animate-in zoom-in-95">
+          <div className="bg-purple-50 border border-purple-100 rounded-xl p-4 flex flex-col sm:flex-row items-center justify-between gap-4">
             <div className="flex items-center gap-3">
               <div className="bg-white p-2 rounded-full shadow-sm text-purple-600">
                 <Users2 size={20} />
@@ -155,7 +164,7 @@ export function AdminFamilyManager({ houseId, onRefresh }) {
         )}
       </div>
 
-      {/* SEÇÃO: LISTAR EXISTENTES */}
+      {/* SEÇÃO: LISTAR EXISTENTES (COM MEMBROS) */}
       <div className="bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden">
         <div className="bg-slate-50 px-6 py-4 border-b border-slate-200">
           <h3 className="text-xs font-black text-slate-500 uppercase tracking-widest">
@@ -172,34 +181,58 @@ export function AdminFamilyManager({ houseId, onRefresh }) {
             {families.map((f) => (
               <div
                 key={f.id}
-                className="p-4 sm:px-6 flex items-center justify-between hover:bg-slate-50 transition-colors"
+                className="p-6 flex flex-col sm:flex-row sm:items-center justify-between gap-4 hover:bg-slate-50 transition-colors"
               >
-                <div className="flex items-center gap-4">
-                  <div className="bg-slate-100 p-2 rounded-full text-slate-500">
-                    <Users2 size={18} />
-                  </div>
-                  <div>
-                    <p className="font-bold text-slate-700">{f.name}</p>
-                    <div className="flex items-center gap-2">
+                <div className="space-y-3">
+                  <div className="flex items-center gap-4">
+                    <div className="bg-slate-100 p-2 rounded-full text-slate-500">
+                      <Users2 size={18} />
+                    </div>
+                    <div>
+                      <p className="font-bold text-slate-700">{f.name}</p>
                       <span className="text-[10px] font-mono bg-slate-200 text-slate-600 px-1.5 py-0.5 rounded uppercase">
                         #{f.invite_code}
                       </span>
                     </div>
                   </div>
+
+                  {/* 2. LISTA DE MEMBROS AQUI */}
+                  <div className="flex flex-wrap gap-2 ml-12">
+                    {f.profiles?.length > 0 ? (
+                      f.profiles.map((member, idx) => (
+                        <div
+                          key={idx}
+                          className="flex items-center gap-1.5 bg-white border border-slate-200 px-2 py-1 rounded-md shadow-sm"
+                        >
+                          <div
+                            className={`w-1.5 h-1.5 rounded-full ${member.role === "admin" ? "bg-purple-500" : member.role === "leader" ? "bg-blue-500" : "bg-slate-300"}`}
+                          />
+                          <span className="text-[11px] font-medium text-slate-600">
+                            {member.full_name.split(" ")[0]}
+                            <span className="text-[9px] text-slate-400 ml-1 italic">
+                              ({member.role})
+                            </span>
+                          </span>
+                        </div>
+                      ))
+                    ) : (
+                      <span className="text-[10px] text-slate-400 italic">
+                        Nenhum membro ainda
+                      </span>
+                    )}
+                  </div>
                 </div>
 
-                <div className="flex items-center gap-2">
+                <div className="flex items-center gap-2 self-end sm:self-center">
                   <button
                     onClick={() => copyCode(f.invite_code)}
                     className="p-2 text-slate-400 hover:text-blue-600 hover:bg-blue-50 rounded-lg transition-all"
-                    title="Copiar Código"
                   >
                     <Copy size={16} />
                   </button>
                   <button
                     onClick={() => handleDelete(f.id, f.name)}
                     className="p-2 text-slate-400 hover:text-red-600 hover:bg-red-50 rounded-lg transition-all"
-                    title="Deletar Família"
                   >
                     <Trash2 size={16} />
                   </button>
