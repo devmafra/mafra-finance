@@ -68,6 +68,10 @@ export function BillModal({
   };
 
   const handleSave = async () => {
+    // 1. TRAVA DE SEGURANÇA: Evita duplo-clique/race conditions
+    if (isSaving || localSaving) return;
+
+    // Validação básica
     if (!description || !value) {
       alert("Preencha a descrição e o valor.");
       return;
@@ -78,14 +82,10 @@ export function BillModal({
       return;
     }
 
-    // 1. LIMPEZA DE DUPLICATAS NO FRONT-END
-    // Garante que o array não tenha o mesmo ID duas vezes antes de enviar
-    const uniqueMembers = [...new Set(selectedMembers)];
-
     if (editingBill) {
       setLocalSaving(true);
       try {
-        // 2. ATUALIZA A CONTA PRINCIPAL
+        // 1. Atualiza a conta principal (expenses)
         const { error: updateError } = await supabase
           .from("expenses")
           .update({
@@ -98,22 +98,35 @@ export function BillModal({
 
         if (updateError) throw updateError;
 
-        // 3. REMOVE OS SPLITS ANTIGOS
-        // Forçamos a espera da deleção completa antes de seguir
-        const { error: deleteError } = await supabase
+        // 2. Remove os splits antigos
+        const { data: deleteData, error: deleteError } = await supabase
           .from("expense_splits")
           .delete()
-          .eq("expense_id", editingBill.id);
+          .eq("expense_id", editingBill.id)
+          .select(); // O .select() força o retorno das linhas deletadas para debug
 
         if (deleteError) throw deleteError;
 
-        // 4. CRIA OS NOVOS SPLITS
+        // Debug: Se deleteData for vazio e existiam membros antes, o RLS está bloqueando o DELETE!
+        if (
+          deleteData &&
+          deleteData.length === 0 &&
+          selectedMembers.length > 0
+        ) {
+          console.warn(
+            "Nenhuma linha deletada. Verifique suas políticas de RLS no Supabase!",
+          );
+        }
+
+        // 3. LIMPEZA DE IDs DUPLICADOS: Garante que cada ID apareça só uma vez
+        const uniqueMembers = [...new Set(selectedMembers)];
         const sharePercentage = (100 / uniqueMembers.length).toFixed(2);
 
+        // 4. Cria os novos splits
         const newSplits = uniqueMembers.map((memberId) => ({
           expense_id: editingBill.id,
           profile_id: memberId,
-          share_percentage: parseFloat(sharePercentage), // Convertendo para número
+          share_percentage: sharePercentage,
           is_paid: false,
         }));
 
@@ -126,20 +139,20 @@ export function BillModal({
         onRefresh();
         onClose();
       } catch (err) {
-        console.error("Erro completo:", err);
+        console.error(err);
         alert("Erro ao atualizar: " + err.message);
       } finally {
         setLocalSaving(false);
       }
     } else {
-      // ... Lógica de criação (mantida)
+      // --- LÓGICA DE CRIAÇÃO (MANTIDA) ---
       addExpense({
         description,
         value,
         date,
         type,
         installments,
-        selectedMembers: uniqueMembers, // Usando a lista limpa aqui também
+        selectedMembers,
         category,
         onSuccess: () => {
           onRefresh();
