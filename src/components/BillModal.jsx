@@ -68,7 +68,6 @@ export function BillModal({
   };
 
   const handleSave = async () => {
-    // Validação básica
     if (!description || !value) {
       alert("Preencha a descrição e o valor.");
       return;
@@ -79,11 +78,14 @@ export function BillModal({
       return;
     }
 
+    // 1. LIMPEZA DE DUPLICATAS NO FRONT-END
+    // Garante que o array não tenha o mesmo ID duas vezes antes de enviar
+    const uniqueMembers = [...new Set(selectedMembers)];
+
     if (editingBill) {
-      // --- LÓGICA DE EDIÇÃO ATUALIZADA ---
       setLocalSaving(true);
       try {
-        // 1. Atualiza a conta principal (expenses)
+        // 2. ATUALIZA A CONTA PRINCIPAL
         const { error: updateError } = await supabase
           .from("expenses")
           .update({
@@ -96,8 +98,8 @@ export function BillModal({
 
         if (updateError) throw updateError;
 
-        // 2. REFAZ O RATEIO (SPLITS)
-        // Primeiro: Remove os splits antigos (para evitar duplicatas ou sobras)
+        // 3. REMOVE OS SPLITS ANTIGOS
+        // Forçamos a espera da deleção completa antes de seguir
         const { error: deleteError } = await supabase
           .from("expense_splits")
           .delete()
@@ -105,14 +107,14 @@ export function BillModal({
 
         if (deleteError) throw deleteError;
 
-        // Segundo: Cria os novos splits com os membros selecionados
-        const sharePercentage = (100 / selectedMembers.length).toFixed(2);
+        // 4. CRIA OS NOVOS SPLITS
+        const sharePercentage = (100 / uniqueMembers.length).toFixed(2);
 
-        const newSplits = selectedMembers.map((memberId) => ({
+        const newSplits = uniqueMembers.map((memberId) => ({
           expense_id: editingBill.id,
           profile_id: memberId,
-          share_percentage: sharePercentage,
-          is_paid: false, // Ao reeditar o rateio, resetamos o status de pagamento por segurança
+          share_percentage: parseFloat(sharePercentage), // Convertendo para número
+          is_paid: false,
         }));
 
         const { error: insertError } = await supabase
@@ -124,20 +126,20 @@ export function BillModal({
         onRefresh();
         onClose();
       } catch (err) {
-        console.error(err);
+        console.error("Erro completo:", err);
         alert("Erro ao atualizar: " + err.message);
       } finally {
         setLocalSaving(false);
       }
     } else {
-      // --- LÓGICA DE CRIAÇÃO (MANTIDA) ---
+      // ... Lógica de criação (mantida)
       addExpense({
         description,
         value,
         date,
         type,
         installments,
-        selectedMembers,
+        selectedMembers: uniqueMembers, // Usando a lista limpa aqui também
         category,
         onSuccess: () => {
           onRefresh();
